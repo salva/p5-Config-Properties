@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.57';
+our $VERSION = '0.58';
 
 use IO::Handle;
 use Carp;
@@ -72,10 +72,10 @@ sub new {
 # set property only if its going to change the property value.
 #
 sub changeProperty {
-    my ($self, $key, $new, $default) = @_;
+    my ($self, $key, $new, @default) = @_;
     _t_key $key;
     _t_value $new;
-    my $old=$self->getProperty($key, $default);
+    my $old=$self->getProperty($key, @default);
     if ($old ne $new) {
 	$self->setProperty($key, $new);
 	return 1;
@@ -335,16 +335,28 @@ sub store { shift->save(@_) }
 #	getProperty() - Return the value of a property key. Returns the default
 #		for that key (if there is one) if no value exists for that key.
 sub getProperty {
-    my ($self, $key, $default)=@_;
+    my $self = shift;
+    my $key = shift;
     _t_key $key;
 
     if (exists $self->{properties}{$key}) {
 	return $self->{properties}{$key}
     }
     elsif (defined $self->{defaults}) {
-	return $self->{defaults}->getProperty($key, $default);
+	return $self->{defaults}->getProperty($key, @_);
     }
-    $default;
+    for (@_) {
+	return $_ if defined $_
+    }
+    return undef
+}
+
+sub requireProperty {
+    my $this = shift;
+    my $prop = $this->getProperty(@_);
+    defined $prop
+	or die "required property '$_[0]' not found on configuration file\n";
+    return $prop;
 }
 
 
@@ -484,10 +496,15 @@ creates a new Config::Properties object. The optional C<$defaults>
 parameter can be used to pass another Config::Properties object
 holding default property values.
 
-=item $p-E<gt>getProperty($k, $default)
+=item $p-E<gt>getProperty($k, $default, $default2, ...)
 
-return property C<$k> or C<$default> if property C<$k> is not
-defined.
+return property C<$k> or when not defined, the first defined
+C<$default*>.
+
+=item $p-E<gt>requireProperty($k, $default, $default2, ...)
+
+this method is similar to C<getProperty> but dies if the requested
+property is not found.
 
 =item $p-E<gt>setProperty($k, $v)
 
@@ -495,7 +512,7 @@ set property C<$k> value to C<$v>.
 
 =item $p-E<gt>changeProperty($k, $v)
 
-=item $p-E<gt>changeProperty($k, $v, $default)
+=item $p-E<gt>changeProperty($k, $v, $default, $default2, ...)
 
 method similar to C<setPropery> but that does nothing when the new
 value is equal to the one returned by C<getProperty>.

@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+0.58  Sep 16 2004
+	- on getProperty methods admit several defaults and take the
+	  first defined one.
+
 0.57  May 07 2004
 	- retain properties read/construction order when saving
 
@@ -16,8 +20,8 @@ Revision history for Perl extension Config::Properties.
 	- new method deleteProperty
 	- propertyNames now also returns names from default properties
 	- getProperties now also returns default properties
-	- new properties method that return a flated hash with all the
-	  properties
+	- new properties method returning a flated hash with all the
+	  properties added
 	- getProperty doesn't return the old value anymore... anyway
 	  it's implementation was always broken!
 	- parameter checking changed to use some common functions
