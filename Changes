@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+0.55  Sep 22 2003
+	- corrected bug in getProperties returning a flatten hash
+	  instead of a reference to it.
+
 0.54  Sep 19 2003
 	- public methods documented
 	- new method changeProperty

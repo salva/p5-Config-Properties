@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.54';
+our $VERSION = '0.55';
 
 use IO::Handle;
 use Carp;
@@ -115,7 +115,8 @@ sub properties {
 }
 
 #	getProperties() - Return a hashref of all of the properties
-sub getProperties { { shift->properties } }
+sub getProperties { return { shift->properties }; }
+# sub getProperties { my $r={ shift->properties }; return $r; }
 
 
 #	getFormat() - Return the output format for the properties
