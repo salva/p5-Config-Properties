@@ -11,7 +11,7 @@ $cfg->load(\*DATA);
 my ($fh, $fn)=tempfile()
     or die "unable to create temporal file to save properties";
 
-print STDERR "saving properties to '$fn'\n";
+# print STDERR "saving properties to '$fn'\n";
 
 $cfg->store($fh, "test header");
 close ($fh)
@@ -37,7 +37,7 @@ foreach my $k ($cfg->propertyNames, $cfg2->propertyNames) {
 	
 }
 
-# unlink $fn;
+unlink $fn;
 
 __DATA__
 # hello

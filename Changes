@@ -1,5 +1,8 @@
 Revision history for Perl extension Config::Properties.
 
+0.46  Apr 24 2003
+	- 5_test.t was printing debug information
+
 0.45  Apr 24 2003
 	- more tests added
 	- wrapping of several consecutive spaces works now
