@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+0.51  Jun 10 2003
+	- improved docs for beginners
+	- pointer to Config::Properties::Simple added
+
 0.50  May 27 2003
 	- escape $_ on test name on 1_parse.t
 	- require latest Text::Wrap version

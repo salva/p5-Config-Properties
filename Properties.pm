@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.50';
+our $VERSION = '0.51';
 
 use IO::Handle;
 # use Text::Wrap; loaded on demand
@@ -317,20 +317,33 @@ Config::Properties - Read and write property files
 
 =head1 SYNOPSIS
 
-use Config::Properties;
+  use Config::Properties;
 
-my $properties = new Config::Properties();
-$properties->load( $fileHandle );
+  # reading...
 
-$value = $properties->getProperty( $key );
-$properties->setProperty( $key, $value );
+  open PROPS, "< my_config.props"
+    or die "unable to open configuration file";
 
-$properties->format( '%s => %s' );
-$properties->store( $fileHandle, $header );
+  my $properties = new Config::Properties();
+  $properties->load(*PROPS);
+
+  $value = $properties->getProperty( $key );
+
+
+  # saving...
+
+  open PROPS, "> my_config.props"
+    or die "unable to open configuration file for writing";
+
+  $properties->setProperty( $key, $value );
+
+  $properties->format( '%s => %s' );
+  $properties->store(*PROPS, $header );
+
 
 =head1 DESCRIPTION
 
-Config::Properties is an near implementation of the java.util.Properties API.
+Config::Properties is a near implementation of the java.util.Properties API.
 It is designed to allow easy reading, writing and manipulation of Java-style
 property files.
 
@@ -359,7 +372,7 @@ $object->format() (with no arguments) or $object->getFormat().
 
 =over 4
 
-*** DEPRECATED ***
+*** DEPRECATED!!! ***
 
 If a true third parameter is passed to the constructor, the Config::Properties object
 be created in PERL_MODE. This can be set at any time by passing a true or false value
@@ -375,9 +388,15 @@ variable.
 
 --- As PERL_MODE has not ever done anything its usage has been deprecated ---
 
-*** DEPRECATED ***
+*** DEPRECATED!!! ***
 
 =back
+
+=head1 SEE ALSO
+
+Java docs for C<java.util.Properties> at L<http://java.sun.com/j2se/1.3/docs/api/index.html>.
+
+L<Config::Properties::Simple> for a simpler alternative interface to L<Config::Properties>.
 
 =head1 AUTHORS
 
