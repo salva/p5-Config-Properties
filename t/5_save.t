@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 1.t'
 
-use Test::More tests => 20;
+use Test::More tests => 24;
 use Config::Properties;
 use File::Temp qw(tempfile);
 
@@ -64,3 +64,9 @@ long\ line = Text::Wrap::wrap()" has a number of variables that control its beha
 wrap-me: \ \ \ \ \ \  \ \\  \\\\\ \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ hello!
 
 too\ many\ spaces:\                                                                                                        hello again!
+
+# comment = hello
+\# comment = bye
+
+! comment2 = good
+\! comment2 = bye

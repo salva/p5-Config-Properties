@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.46';
+our $VERSION = '0.47';
 
 use IO::Handle;
 # use Text::Wrap; loaded on demand
@@ -113,10 +113,7 @@ sub load {
     defined($file)
 	or croak "Config::Properties::load( file )";
 
-    while (<$file>) {
-	$self->{line_number}=$file->input_line_number;
-	$self->process_line($_, $file);
-    }
+    1 while $self->process_line($file);
 }
 
 
@@ -134,6 +131,7 @@ sub escape_key {
 	"\\".($esc{$1}||$1) }ge;
     $_[0]=~s{([^\x20-\x7e])}{sprintf "\\u%04x", ord $1}ge;
     $_[0]=~s/^ /\\ /;
+    $_[0]=~s/^([#!])/\\$1/;
     $_[0]=~s/(?<!\\)((?:\\\\)*) $/$1\\ /;
 }
 
@@ -145,22 +143,21 @@ sub escape_value {
 }
 
 sub unescape {
-    $_[0]=~s/\\([tnr\\"' =:])|u([\da-fA-F]{4})/
+    $_[0]=~s/\\([tnr\\"' =:#!])|u([\da-fA-F]{4})/
 	defined $1 ? $unesc{$1}||$1 : chr hex $2 /ge;
 }
 
 
-#	process_line() - Recursive function used to parse a line from the
-#					properties file.
+#	process_line() - read and parse a line from the properties file.
 sub process_line {
-    my ($self, $line, $file) = @_;
+    my ($self, $file) = @_;
+    my $line=<$file>;
 
-    # unless(defined($line) && defined($file)) {
-    # croak "Config::Properties::process_line( line, file )";
-    # }
+    defined $line or return undef;
+    $line =~ /^\s*(\#|\!|$)/ and return 1;
 
+    $self->{line_number}=$file->input_line_number;
     chomp $line;
-    return if $line =~ /^\s*(\#|\!|$)/;
 
     # handle continuation lines
     my @lines;
@@ -187,6 +184,8 @@ sub process_line {
     unescape $value;
     $self->{properties}{$key} =
 	$self->validate($key, $value);
+
+    return 1;
 }
 
 #       validate(key, value) - check if the property is valid.
@@ -314,7 +313,7 @@ __END__
 
 =head1 NAME
 
-Config::Properties - read Java-style properties files
+Config::Properties - read and write property files
 
 =head1 SYNOPSIS
 

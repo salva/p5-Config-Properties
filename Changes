@@ -1,5 +1,10 @@
 Revision history for Perl extension Config::Properties.
 
+0.47  Apr26 2003
+	- escape at key starts/unescape '#' and '!'
+	- process_line method signature changed
+	- don't use $_ because it can be read only bug (Craig Manley)
+
 0.46  Apr 24 2003
 	- 5_test.t was printing debug information
 
