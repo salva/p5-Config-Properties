@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.51';
+our $VERSION = '0.53';
 
 use IO::Handle;
 # use Text::Wrap; loaded on demand
@@ -220,6 +220,11 @@ sub reallySave {
 
     require Text::Wrap;
 
+    my $wrap=($Text::Wrap::VERSION >= 2001.0929);
+    unless ($wrap) {
+	carp "Text::Wrap module is to old, version 2001.0929 or newer required: long lines will not be wrapped"
+    }
+
     local($Text::Wrap::separator)=" \\\n";
     local($Text::Wrap::unexpand)=undef;
     local($Text::Wrap::huge)='overflow';
@@ -230,11 +235,17 @@ sub reallySave {
 	my $value=$self->{properties}{$key};
 	escape_key $key;
 	escape_value $value;
-	$file->print( Text::Wrap::wrap( "",
-					"    ",
-					sprintf( $self->{'format'},
-						 $key, $value ) ),
-		      "\n" );
+
+	if ($wrap) {
+	    $file->print( Text::Wrap::wrap( "",
+					    "    ",
+					    sprintf( $self->{'format'},
+						     $key, $value ) ),
+			  "\n" );
+	}
+	else {
+	    $file->print(sprintf( $self->{'format'}, $key, $value ), "\n")
+	}
     }
 }
 

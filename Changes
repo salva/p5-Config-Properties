@@ -1,5 +1,12 @@
 Revision history for Perl extension Config::Properties.
 
+0.53  Aug 15 2003
+	- fall back mode and warning when Text::Wrap module is not
+	  recent enough.
+
+0.52  Jul 30 2003
+	- added new test for saving and wrapping
+
 0.51  Jun 10 2003
 	- improved docs for beginners
 	- pointer to Config::Properties::Simple added

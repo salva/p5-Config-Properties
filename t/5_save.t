@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 1.t'
 
-use Test::More tests => 24;
+use Test::More tests => 26;
 use Config::Properties;
 use File::Temp qw(tempfile);
 
@@ -62,6 +62,8 @@ long\ line = Text::Wrap::wrap()" has a number of variables that control its beha
        values so that the original value is restored.  This "local()" trick \
        will not work if you import the variable into your own namespace.
 wrap-me: \ \ \ \ \ \  \ \\  \\\\\ \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ hello!
+
+cmd3=/usr/share/Artemis/bin/loki -vip 10.51.100.120 -file f3058 -it 10 -repeat 100000000 -proc read -vdir /vol1 -useGateway 172.16.254.254 %ETH%
 
 too\ many\ spaces:\                                                                                                        hello again!
 
