@@ -1,7 +1,16 @@
 Revision history for Perl extension Config::Properties.
 
-0.47  Apr26 2003
-	- escape at key starts/unescape '#' and '!'
+0.49  May 20 2003
+	- CRLF line ends from windows files were not correctly handled
+	  on unix
+	- test for that bug
+
+0.48  May 1 2003
+	- added new test for parsing \\
+
+0.47  Apr 26 2003
+	- more tests added
+	- escape '#' and '!' at key starts / unescape
 	- process_line method signature changed
 	- don't use $_ because it can be read only bug (Craig Manley)
 

@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 1.t'
 
-use Test::More tests => 10;
+use Test::More tests => 13;
 BEGIN { use_ok('Config::Properties') };
 
 my $cfg=Config::Properties->new();
@@ -19,6 +19,11 @@ is ($cfg->getProperty('less'), "who said:\tless ??? ", 'less');
 is ($cfg->getProperty("cra\n=: \\z'y'"), 'jump', 'crazy');
 is ($cfg->getProperty("#nocmt"), 'good', 'no comment 1');
 is ($cfg->getProperty("!nocmt"), 'good', 'no comment 2');
+is ($cfg->getProperty("lineend1"), 'here', 'line end 1');
+is ($cfg->getProperty("lineend2"), 'here', 'line end 2');
+is ($cfg->getProperty("\\\\machinename\\folder"),
+    "\\\\windows\\ style\\path",
+    'windows style path');
 
 __DATA__
 # hello
@@ -38,3 +43,8 @@ cra\n\=\:\ \\z'y' jump
 
 \!nocmt = good
 !nocmt = bad
+
+lineend1=here
+lineend2=here
+
+\\\\machinename\\folder = \\\\windows\\ style\\path
