@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.49';
+our $VERSION = '0.50';
 
 use IO::Handle;
 # use Text::Wrap; loaded on demand
@@ -155,19 +155,16 @@ sub process_line {
 
     defined $line or return undef;
     $line =~ /^\s*(\#|\!|$)/ and return 1;
-
     $self->{line_number}=$file->input_line_number;
-    # chomp $line;
-    $line=~s/\x0D*\x0A$//;
+    $line =~ s/\x0D*\x0A$//;
 
     # handle continuation lines
     my @lines;
     while ($line =~ /(\\+)$/ and length($1) & 1) {
 	$line =~ s/\\$//;
 	push @lines, $line;
-	# chomp($line = <$file>);
 	$line = <$file>;
-	$line=~s/\x0D*\x0A$//;
+	$line =~ s/\x0D*\x0A$//;
 	$line =~ s/^\s+//;
     }
     $line=join('', @lines, $line) if @lines;

@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+0.50  May 27 2003
+	- escape $_ on test name on 1_parse.t
+	- require latest Text::Wrap version
+
 0.49  May 20 2003
 	- CRLF line ends from windows files were not correctly handled
 	  on unix

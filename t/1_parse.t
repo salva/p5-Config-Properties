@@ -8,7 +8,7 @@ my $cfg=Config::Properties->new();
 for (1) {
     eval { $cfg->load(\*DATA) };
 }
-ok (!$@, "don't use $_");
+ok (!$@, "don't use \$_");
 
 
 is ($cfg->getProperty('foo'), 'one', 'foo');
