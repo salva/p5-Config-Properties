@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 our (%properties, $defaults);
 
@@ -59,9 +59,10 @@ sub process_line {
 	my $line = shift or die "Config::Properties.process_line( line, file )";;
 	my $file = shift or die "Config::Properties.process_line( line, file )";
 	$line =~ s/\015?\012$//;
+	$line =~ s/\\\\(?!$)/\\/g;
 	return if $line =~ /^\s*(\#|\!)/;
 	
-	if ($line =~ /\\\s*$/) { 
+	if ($line =~ /\\\s*$/ and not $line =~ s/\\\\$/\\/g) { 
 		#print "Found match...";
 		$line =~ s/\\\s*$//;
 		my $newline = <$file>;

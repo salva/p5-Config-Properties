@@ -1,5 +1,8 @@
 Revision history for Perl extension Config::Properties.
 
+0.02  Thu May 03 21:19:00 2001
+	-Fixed bug relating to doubled escape characters(\\). Thanks to David Boyce for the spot.
+
 0.01  Wed Jan 17 15:38:07 2001
 	- original version; created by h2xs 1.20 with options
 		-X -n Config::Properties
