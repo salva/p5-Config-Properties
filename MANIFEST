@@ -8,3 +8,4 @@ t/2_error.t
 t/3_valid.t
 t/4_invalid.t
 t/5_save.t
+META.yml                                 Module meta-data (added by MakeMaker)

@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.55';
+our $VERSION = '0.56';
 
 use IO::Handle;
 use Carp;
@@ -200,7 +200,7 @@ sub escape_value {
 }
 
 sub unescape {
-    $_[0]=~s/\\([tnr\\"' =:#!])|u([\da-fA-F]{4})/
+    $_[0]=~s/\\([tnr\\"' =:#!])|\\u([\da-fA-F]{4})/
 	defined $1 ? $unesc{$1}||$1 : chr hex $2 /ge;
 }
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension Config::Properties.
 
+0.56  Oct 20 2003
+	- corrected \uXXXX unescaping (Guntis)
+
 0.55  Sep 22 2003
 	- corrected bug in getProperties returning a flatten hash
 	  instead of a reference to it.

@@ -1,7 +1,9 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 1.t'
 
-use Test::More tests => 16;
+use utf8;
+
+use Test::More tests => 17;
 BEGIN { use_ok('Config::Properties') };
 
 my $cfg=Config::Properties->new();
@@ -28,9 +30,12 @@ is ($cfg->getProperty("cmd3"),
     '/usr/share/Artemis/bin/loki -vip 10.51.100.120 -file f3058 -it 10 -repeat 100000000 -proc read -vdir /vol1 -useGateway 172.16.254.254 %ETH%',
     'derrick bug');
 
+is ($cfg->getProperty("unicode"), "he\x{0113}llo", "unicode unencode");
+
 is ($cfg->getProperties->{foo}, 'one', 'getProperties one');
 my %props=$cfg->properties;
 is ($props{foo}, 'one', 'properties one');
+
 
 __DATA__
 # hello
@@ -50,6 +55,8 @@ cra\n\=\:\ \\z'y' jump
 
 \!nocmt = good
 !nocmt = bad
+
+unicode = he\u0113llo
 
 lineend1=here
 lineend2=here
