@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.40';
+our $VERSION = '0.41';
 
 #   new() - Constructor
 #
@@ -12,12 +12,12 @@ our $VERSION = '0.40';
 #   for this object.
 sub new {
 	my $proto = shift;
-	my $defaultProperties = shift || undef;
-	my $perlMode = shift || 0;
-	
+	my $defaultProperties = shift;
+	my $perlMode = shift;
+
 	my $class = ref($proto) || $proto;
-	my $self = { 
-		'PERL_MODE' => $perlMode,
+	my $self = {
+		'PERL_MODE' => (defined($perlMode) && $perlMode) ? 1 : 0,
 		'defaults' => $defaultProperties,
 		'format' => '%s=%s',
 		'properties' => {}
@@ -30,44 +30,57 @@ sub new {
 #	setProperty() - Set the value for a specific property
 sub setProperty {
 	my $self = shift;
-	my $key = shift or die "Config::Properties.setProperty( key, value )";
-	my $value = shift or die "Config::Properties.setProperty( key, value )";
-
-	my $oldValue = $self->{properties}{ $key };
-	$self->{properties}{ $key } = $value;
+	my $key = shift;
+	my $value = shift;
+	unless(defined($key) && length($key) && defined($value)) {
+	 die "Config::Properties.setProperty( key, value )";
+	}
+	my $oldValue = $self->{'properties'}{ $key };
+	$self->{'properties'}{ $key } = $value;
 	return $oldValue;
 }
 
 #	getProperties() - Return a hashref of all of the properties
 sub getProperties {
 	my $self =  shift;
-	return $self->{properties};
+	return $self->{'properties'};
 }
 
 #	setFormat() - Set the output format for the properties
 sub setFormat {
 	my $self = shift;
-	$self->{format} = shift or die "Config::Properties.format( string )";
+	my $format = shift;
+	unless(defined($format) && length($format)) {
+		die "Config::Properties.format( string )";
+	}
+	$self->{'format'} = $format;
 }
 
 #	format() - Alias for get/setFormat();
 sub format {
 	my $self = shift;
-	my $format = shift;	
-	return $self->{format} if not $format;
-	$self->setFormat( $format );
+	my $format = shift;
+	if (defined($format) && length($format)) {
+	 return $self->setFormat($format);
+	}
+	else {
+	 return $self->getFormat();
+	}
 }
 
 #	getFormat() - Return the output format for the properties
 sub getFormat {
 	my $self = shift;
-	return $self->{format};
+	return $self->{'format'};
 }
 
 #	load() - Load the properties from a filehandle
 sub load {
 	my $self = shift;
-	my $file = shift or die "Config::Properties.load( file )";
+	my $file = shift;
+	unless(defined($file)) {
+		die "Config::Properties.load( file )";
+	}
 	while (<$file>) {
 		$self->process_line($_, $file);
 	}
@@ -78,31 +91,34 @@ sub load {
 sub process_line {
 	my $self =  shift;
 	#print "XXX" . join("::", @_) . "XXX\n";
-	my $line = shift or die "Config::Properties.process_line( line, file )";
-	my $file = shift or die "Config::Properties.process_line( line, file )";
+	my $line = shift;
+	my $file = shift;
+	unless(defined($line) && defined($file)) {
+		die "Config::Properties.process_line( line, file )";
+	}
 	$line =~ s/\015?\012$//;
 	if ($line =~ /^\s*(\#|\!|$)/) {
 	 	return;
 	}
-	 
 	if ($line =~ /(\\+)$/ and length($1) % 2) {
 		$line =~ s/\\$//;
 		my $newline = <$file>;
 		$newline =~ s/^\s*//;
-		$self->process_line($line . $newline, $file);
-		return;
+		return $self->process_line($line . $newline, $file);
 	}
-	
+
 	#print "XXX: " . $line . "\n";
 	$line =~ /^\s*([^\s:=]+)(\s*|\s*(\:|\=|\s)\s*(.*?))$/;
 	#print "1: $1 2: $2 3: $3 4: $4\n";
-	die "Config::Properties.process_line: invalid property line" if not $1;
+	unless(defined($1) && length($1)) {
+		die "Config::Properties.process_line: invalid property line";
+	}
 
 	#$properties{ $1 } = ($4 || "");
 	#the javadoc for Properties states that both the name and value
 	#can be escaped. The regex above will break though if ':','=', or
 	#whitespace are included.
-	$self->{properties}{ unescape($1) } = (unescape($4) || "");
+	$self->{'properties'}{ unescape($1) } = (defined($4) && length($4)) ? unescape($4) : ''; # Value ($4) may be '0' !
 }
 
 #	unescape() - converts escaped characters to their real counterparts.
@@ -111,7 +127,7 @@ sub unescape {
 
 	while ($value =~ m/\\(.)/g) {
 		my $result = $1;
-	
+
 		if ($result eq 't') {
 	 	    $result = "\t";
 	 	} elsif ($result eq 'n') {
@@ -119,59 +135,66 @@ sub unescape {
 	 	} elsif ($result eq 'r') {
 	 	    $result = "\r";
 	 	} elsif ($result eq 's') {
-	 	    $result = " ";
+	 	    $result = ' ';
 	 	}
-	 	
+
 	 	my $start = (pos $value) - 2;
 	 	pos $value = $start;
 	 	$value =~ s/\\./$result/;
 	 	pos $value = ($start + 1);
 	}
-	 
-	return $value; 
+
+	return $value;
 }
 
 #	reallySave() - Utility function that performs the actual saving of
 #		the properties file to a filehandle.
 sub reallySave {
-	#print "XXX" . join("::", @_) . "XXX\n"; 
+	#print "XXX" . join("::", @_) . "XXX\n";
 	my $self = shift;
-	my $file = shift or die "Config::Properties.reallySave( file )";
-	foreach (keys %{$self->{properties}}) { 
-		printf $file $self->{format} . "\n", $_, $self->{properties}{$_};
+	my $file = shift;
+	unless(defined($file)) {
+		die "Config::Properties.reallySave( file )";
+	}
+	foreach (keys %{$self->{properties}}) {
+		printf $file $self->{'format'} . "\n", $_, $self->{properties}{$_};
 	}
 }
 
 #	save() - Save the properties to a filehandle with the given header.
 sub save {
-	#print "XXX" . join("::", @_) . "XXX\n"; 
+	#print "XXX" . join("::", @_) . "XXX\n";
 	my $self = shift;
-	my $file = shift or die "Config::Properties.save( file, header )";
-	my $header = shift or die "Config::Properties.save( file, header )";
-
-	print $file "#" . $header . "\n" if $header;
-	print $file "#" . localtime() . "\n";
-
+	my $file = shift;
+	my $header = shift;
+	unless(defined($file) && defined($header) && length($header)) {
+	 die "Config::Properties.save( file, header )";
+	}
+	print $file "#$header\n";
+	print $file '#' . localtime() . "\n";
 	$self->reallySave( $file );
 }
 
 #	store() - Synonym for save()
-sub store { 
+sub store {
 	my $self = shift;
-	$self->save(@_); 
+	$self->save(@_);
 }
 
 #	getProperty() - Return the value of a property key. Returns the default
 #		for that key (if there is one) if no value exists for that key.
 sub getProperty {
 	my $self = shift;
-	my $key = shift or die "Config::Properties.getProperty( key )";
+	my $key = shift;
 	my $default = shift;
-	my $value = $self->{properties}{ $key };
-	if ($self->{defaults} && not $value) {
-	           $value = $self->{defaults}->getProperty($key); 
+	unless(defined($key) && length($key)) { # Key can be '0'!
+		die "Config::Properties.getProperty( key )";
 	}
-	return $value || $default;
+	my $value = $self->{properties}{ $key };
+	if ($self->{defaults} && !defined($value)) { # Value can be '0' or empty string!
+	           $value = $self->{defaults}->getProperty($key);
+	}
+	return defined($value) ? $value : $default; # $value can be 0 or empty string if key exists!
 }
 
 #	propertyName() - Returns an array of the keys of the Properties
@@ -191,16 +214,15 @@ sub list {
 
 #	setPerlMode() - Sets the value (true/false) of the PERL_MODE parameter.
 sub setPerlMode {
-	my $self = shift;
-	my $mode = shift || undef;
-	return $self->{PERL_MODE} = $mode ? $mode : 
-		$self->{PERL_MODE} ? 0 : 1; 
+	my $self = shift;	
+	my $mode = shift;
+	return $self->{'PERL_MODE'} = (defined($mode) && $mode) ? 1 : 0;
 }
 
 #	perlMode() - Returns the current PERL_MODE setting (Default is false)
 sub perlMode {
 	my $self = shift;
-	return $self->{PERL_MODE};
+	return $self->{'PERL_MODE'};
 }
 
 1;
@@ -221,7 +243,7 @@ $value = $properties->getProperty( $key );
 $properties->setProperty( $key, $value );
 
 $properties->format( '%s => %s' );
-$properties->store( $fileHandle, $header ); 
+$properties->store( $fileHandle, $header );
 
 =head1 DESCRIPTION
 
@@ -232,7 +254,7 @@ property files.
 The format of a Java-style property file is that of a key-value pair seperated
 by either whitespace, the colon (:) character, or the equals (=) character.
 Whitespace before the key and on either side of the seperator is ignored.
-	
+
 Lines that begin with either a hash (#) or a bang (!) are considered comment
 lines and ignored.
 
@@ -244,12 +266,12 @@ The official references used to determine this format can be found in the Java A
 for java.util.Properties at http://java.sun.com/j2se/1.3/docs/api/index.html.
 
 When a property file is saved it is in the format "key=value" for each line. This can
-be changed by setting the format attribute using either $object->format( $format_string ) or 
+be changed by setting the format attribute using either $object->format( $format_string ) or
 $object->setFormat( $format_string ) (they do the same thing). The format string is fed to
 printf and must contain exactly two %s format characters. The first will be replaced with
 the key of the property and the second with the value. The string can contain no other
 printf control characters, but can be anything else. A newline will be automatically added
-to the end of the string. You an get the current format string either by using 
+to the end of the string. You an get the current format string either by using
 $object->format() (with no arguments) or $object->getFormat().
 
 If a true third parameter is passed to the constructor, the Config::Properties object

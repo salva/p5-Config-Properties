@@ -1,5 +1,12 @@
 Revision history for Perl extension Config::Properties.
 
+0.41  Tue Jul 10 00:00:00 2002
+	- Fixed value checks in most methods that incorrectly treated the
+	  value '0' or the empty string as an undefined value. I could not
+	  contact the original author in any way (tried 3 email addresses 
+	  and news://comp.lang.perl.modules), so I uploaded this version
+	  myself. Craig Manley (c.manley at skybound.nl).
+
 0.40  Tue Jul 10 11:32:00 2001
 	- 0.4 (almost half-way there) release
 	- Add format/getFormat/setFormat() to change the appearance of saved properties 
