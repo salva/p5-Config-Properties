@@ -1,5 +1,17 @@
 Revision history for Perl extension Config::Properties.
 
+0.54  Sep 19 2003
+	- public methods documented
+	- new method changeProperty
+	- new method deleteProperty
+	- propertyNames now also returns names from default properties
+	- getProperties now also returns default properties
+	- new properties method that return a flated hash with all the
+	  properties
+	- getProperty doesn't return the old value anymore... anyway
+	  it's implementation was always broken!
+	- parameter checking changed to use some common functions
+
 0.53  Aug 15 2003
 	- fall back mode and warning when Text::Wrap module is not
 	  recent enough.
