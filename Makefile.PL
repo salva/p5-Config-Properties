@@ -1,8 +1,5 @@
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-WriteMakefile(
-    'NAME'		=> 'Config::Properties',
-    'VERSION_FROM'	=> 'Properties.pm', # finds $VERSION
-    'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
-);
+
+WriteMakefile( 'NAME'	      => 'Config::Properties',
+	       'VERSION_FROM' => 'Properties.pm',
+	       'PREREQ_PM'    => { 'Test::More' => 0 } );

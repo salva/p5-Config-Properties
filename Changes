@@ -1,5 +1,14 @@
 Revision history for Perl extension Config::Properties.
 
+0.44  Apr 23 2003
+	- process_line deep recursion problem fixed (Eric Kolve)
+	- getProperties now return a copy and not a ref to the
+	  properties hash inside the object
+	- new from object deprecated
+	- unused PERL_MODE deprecated
+	- general code cleanup
+	- code reformated to 4 spaces indents
+
 0.43  Tue Apr 15 2003
 	- module maintenace changed from Craig Manley to Salvador
 	  Fandiño <sfandino@yahoo.com>
