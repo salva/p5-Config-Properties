@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.56';
+our $VERSION = '0.57';
 
 use IO::Handle;
 use Carp;
@@ -58,10 +58,12 @@ sub new {
 	and carp "creating new Config::Properties objects from prototypes is deprecated";
 
     my $class = ref($proto) || $proto;
-    my $self = { 'PERL_MODE' => $perlMode ? 1 : 0,
-		 'defaults' => $defaultProperties,
-		 'format' => '%s=%s',
-		 'properties' => {} };
+    my $self = { PERL_MODE => $perlMode ? 1 : 0,
+		 defaults => $defaultProperties,
+		 format => '%s=%s',
+		 properties => {},
+		 sorter => 1,
+		 sorted_keys => {} };
     bless $self, $class;
 
     return $self;
@@ -85,8 +87,10 @@ sub deleteProperty {
     my ($self, $key, $recurse) = @_;
     _t_key $key;
 
-    delete $self->{properties}{$key}
-	if exists $self->{properties}{$key};
+    if (exists $self->{properties}{$key}) {
+      delete $self->{properties}{$key};
+      delete $self->{sorted_keys}{$key};
+    }
 
     $self->{defaults}->deleteProperty($key, 1)
 	if ($recurse and $self->{defaults});
@@ -101,6 +105,7 @@ sub setProperty {
     defined(wantarray) and
 	carp "warning: setProperty doesn't return the old value anymore";
 
+    $self->{sorted_keys}{$key} ||= $self->{sorter}++;
     $self->{properties}{$key} = $value;
 }
 
@@ -239,6 +244,7 @@ sub process_line {
 	
     unescape $key;
     unescape $value;
+    $self->{sorted_keys}{$key} = $self->{sorter}++;
     $self->{properties}{$key} =
 	$self->validate($key, $value);
 
@@ -287,7 +293,8 @@ sub _save {
     local($Text::Wrap::huge)='overflow';
     local($Text::Wrap::break)=qr/(?<!\\) (?! )/;
 
-    foreach (sort keys %{$self->{properties}}) {
+    my $sk=$self->{sorted_keys};
+    foreach (sort { $sk->{$a} <=> $sk->{$b} } keys %{$self->{properties}}) {
 	my $key=$_;
 	my $value=$self->{properties}{$key};
 	escape_key $key;

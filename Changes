@@ -1,5 +1,8 @@
 Revision history for Perl extension Config::Properties.
 
+0.57  May 07 2004
+	- retain properties read/construction order when saving
+
 0.56  Oct 20 2003
 	- corrected \uXXXX unescaping (Guntis)
 
