@@ -1,5 +1,17 @@
 Revision history for Perl extension Config::Properties.
 
+0.40  Tue Jul 10 11:32:00 2001
+	- 0.4 (almost half-way there) release
+	- Add format/getFormat/setFormat() to change the appearance of saved properties 
+		(thanks to David Boyce for the idea)
+	- Added POD documenation for format feature
+	- Typo fixes in POD
+	- Add reference to official JavaDoc (idea thanks to David Boyce)
+	Randy Jay Yarger (ryarger@mediaone.net)
+
+	- Fixed default handling when retrieving a property value
+	David Boyce (dsb@world.std.com)
+	
 0.03  Sat May 19 21:56:10 2001
 	- Corrected Object Oriented behavior (was using class variables for everying,
 		now using instance variables)

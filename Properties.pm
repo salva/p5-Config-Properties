@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.40';
 
 #   new() - Constructor
 #
@@ -19,6 +19,7 @@ sub new {
 	my $self = { 
 		'PERL_MODE' => $perlMode,
 		'defaults' => $defaultProperties,
+		'format' => '%s=%s',
 		'properties' => {}
 	};
 	bless($self, $class);
@@ -41,6 +42,26 @@ sub setProperty {
 sub getProperties {
 	my $self =  shift;
 	return $self->{properties};
+}
+
+#	setFormat() - Set the output format for the properties
+sub setFormat {
+	my $self = shift;
+	$self->{format} = shift or die "Config::Properties.format( string )";
+}
+
+#	format() - Alias for get/setFormat();
+sub format {
+	my $self = shift;
+	my $format = shift;	
+	return $self->{format} if not $format;
+	$self->setFormat( $format );
+}
+
+#	getFormat() - Return the output format for the properties
+sub getFormat {
+	my $self = shift;
+	return $self->{format};
 }
 
 #	load() - Load the properties from a filehandle
@@ -117,7 +138,7 @@ sub reallySave {
 	my $self = shift;
 	my $file = shift or die "Config::Properties.reallySave( file )";
 	foreach (keys %{$self->{properties}}) { 
-		print $file $_ . "=" . $self->{properties}{$_} . "\n";
+		printf $file $self->{format} . "\n", $_, $self->{properties}{$_};
 	}
 }
 
@@ -147,10 +168,10 @@ sub getProperty {
 	my $key = shift or die "Config::Properties.getProperty( key )";
 	my $default = shift;
 	my $value = $self->{properties}{ $key };
-	if ($default and not $value) {
-		return $default;
+	if ($self->{defaults} && not $value) {
+	           $value = $self->{defaults}->getProperty($key); 
 	}
-	return $self->{properties}{ $key }; 
+	return $value || $default;
 }
 
 #	propertyName() - Returns an array of the keys of the Properties
@@ -193,13 +214,14 @@ Config::Properties - read Java-style properties files
 
 use Config::Properties;
 
-my $properties = new Properties();
+my $properties = new Config::Properties();
 $properties->load( $fileHandle );
 
 $value = $properties->getProperty( $key );
 $properties->setProperty( $key, $value );
 
-$properties->store( $fileHandle, $header );
+$properties->format( '%s => %s' );
+$properties->store( $fileHandle, $header ); 
 
 =head1 DESCRIPTION
 
@@ -218,7 +240,17 @@ A backslash (\) at the end of a line signifies a continuation and the next
 line is counted as part of the current line (minus the backslash, any whitespace
 after the backslash, the line break, and any whitespace at the beginning of the next line).
 
-When a property file is saved it is in the format "key=value" for each line.
+The official references used to determine this format can be found in the Java API docs
+for java.util.Properties at http://java.sun.com/j2se/1.3/docs/api/index.html.
+
+When a property file is saved it is in the format "key=value" for each line. This can
+be changed by setting the format attribute using either $object->format( $format_string ) or 
+$object->setFormat( $format_string ) (they do the same thing). The format string is fed to
+printf and must contain exactly two %s format characters. The first will be replaced with
+the key of the property and the second with the value. The string can contain no other
+printf control characters, but can be anything else. A newline will be automatically added
+to the end of the string. You an get the current format string either by using 
+$object->format() (with no arguments) or $object->getFormat().
 
 If a true third parameter is passed to the constructor, the Config::Properties object
 be created in PERL_MODE. This can be set at any time by passing a true or false value
@@ -229,7 +261,7 @@ The following is a list of the current behavior changed under PERL_MODE:
 
 * Ummm... nothing yet.
 
-The current (true/false) value of PERL_MODE can be retrieved with the perlMode() instance
+The current (true/false) value of PERL_MODE can be retrieved with the perlMode instance
 variable.
 
 =head1 AUTHOR
