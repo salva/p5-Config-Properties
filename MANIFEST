@@ -1,9 +1,10 @@
+MANIFEST
+README
 Changes
 Makefile.PL
-MANIFEST
 Properties.pm
-README
-t/2_error.t
 t/1_parse.t
-t/4_invalid.t
+t/2_error.t
 t/3_valid.t
+t/4_invalid.t
+t/5_save.t

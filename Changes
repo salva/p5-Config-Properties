@@ -1,5 +1,12 @@
 Revision history for Perl extension Config::Properties.
 
+0.45  Apr 24 2003
+	- more tests added
+	- wrapping of several consecutive spaces works now
+	- spaces at the beginning and at the end of keywords and
+	  values escaped when saving
+	- added wrapping when saving long properties
+
 0.44  Apr 23 2003
 	- process_line deep recursion problem fixed (Eric Kolve)
 	- getProperties now return a copy and not a ref to the
@@ -7,7 +14,7 @@ Revision history for Perl extension Config::Properties.
 	- new from object deprecated
 	- unused PERL_MODE deprecated
 	- general code cleanup
-	- code reformated to 4 spaces indents
+	- code reformated to 4 space indents
 
 0.43  Tue Apr 15 2003
 	- module maintenace changed from Craig Manley to Salvador

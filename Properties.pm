@@ -3,9 +3,10 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.44';
+our $VERSION = '0.45';
 
 use IO::Handle;
+# use Text::Wrap; loaded on demand
 use Carp;
 
 #   new() - Constructor
@@ -132,12 +133,15 @@ sub escape_key {
     $_[0]=~s{([\t\n\r\\"' =:])}{
 	"\\".($esc{$1}||$1) }ge;
     $_[0]=~s{([^\x20-\x7e])}{sprintf "\\u%04x", ord $1}ge;
+    $_[0]=~s/^ /\\ /;
+    $_[0]=~s/(?<!\\)((?:\\\\)*) $/$1\\ /;
 }
 
 sub escape_value {
     $_[0]=~s{([\t\n\r\\])}{
 	"\\".($esc{$1}||$1) }ge;
     $_[0]=~s{([^\x20-\x7e])}{sprintf "\\u%04x", ord $1}ge;
+    $_[0]=~s/^ /\\ /;
 }
 
 sub unescape {
@@ -215,12 +219,23 @@ sub reallySave {
     defined($file)
 	or croak "Config::Properties::reallySave( file )";
 
+    require Text::Wrap;
+
+    local($Text::Wrap::separator)=" \\\n";
+    local($Text::Wrap::unexpand)=undef;
+    local($Text::Wrap::huge)='overflow';
+    local($Text::Wrap::break)=qr/(?<!\\) (?! )/;
+
     foreach (sort keys %{$self->{properties}}) {
 	my $key=$_;
 	my $value=$self->{properties}{$key};
 	escape_key $key;
 	escape_value $value;
-	printf $file $self->{'format'} . "\n", $key, $value;
+	$file->print( Text::Wrap::wrap( "",
+					"    ",
+					sprintf( $self->{'format'},
+						 $key, $value ) ),
+		      "\n" );
     }
 }
 
