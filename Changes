@@ -1,5 +1,24 @@
 Revision history for Perl extension Config::Properties.
 
+0.43  Tue Apr 15 2003
+	- module maintenace changed from Craig Manley to Salvador
+	  Fandiño <sfandino@yahoo.com>
+
+0.42  Tue Apr 15 2003
+	- Added 'setValidator', 'getValidator' and 'validator'
+	  methods
+	- Added 'validate' method to perform validations on
+	  property/value pairs
+	- Added 'fail' method to report errors
+	- Added 'line_number' method
+	- Use Carp to report interface errors
+	- Reworked unescape to handle unicode sequences
+	- Reworked parsing regexp to support escaping [:= ] on
+	  property names
+	- Escape conflicting chars when writing
+	- Tests changed to use to Test::More
+	- Added some tests
+
 0.41  Tue Jul 10 00:00:00 2002
 	- Fixed value checks in most methods that incorrectly treated the
 	  value '0' or the empty string as an undefined value. I could not

@@ -2,5 +2,8 @@ Changes
 Makefile.PL
 MANIFEST
 Properties.pm
-test.pl
 README
+t/2_error.t
+t/1_parse.t
+t/4_invalid.t
+t/3_valid.t

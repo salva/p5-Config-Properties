@@ -1,10 +1,10 @@
 Config::Properties
-=============
+==================
 
 Description
 -----------
 
-Config::Properties is an near implementation of the java.util.Properties API.
+Config::Properties is a near implementation of the java.util.Properties API.
 It is designed to allow easy reading, writing and manipulation of Java-style
 property files.
 
@@ -21,13 +21,6 @@ after the backslash, the line break, and any whitespace at the beginning of the 
 
 When a property file is saved it is in the format "key=value" for each line.
 
-Copyright
----------
-
-Copyright (c) 2001 Randy Jay Yarger. All Rights Reserved.
-
-This program is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
 
 Installation
 ------------
@@ -44,7 +37,13 @@ Installation
 > make install
 > perldoc Config::Properties
 
-Author
-------
 
-Randy Jay Yarger <ryarger@mediaone.net>
+Copyright
+---------
+
+Copyright (c) 2001 Randy Jay Yarger. All Rights Reserved.
+Copyright (c) 2002 Craig Manley
+Copyright (c) 2003 Salvador Fandiño <sfandino@yahoo.com>
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.

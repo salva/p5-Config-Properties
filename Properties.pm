@@ -3,7 +3,10 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.41';
+our $VERSION = '0.43';
+
+use IO::Handle;
+use Carp;
 
 #   new() - Constructor
 #
@@ -33,7 +36,7 @@ sub setProperty {
 	my $key = shift;
 	my $value = shift;
 	unless(defined($key) && length($key) && defined($value)) {
-	 die "Config::Properties.setProperty( key, value )";
+	 croak "Config::Properties.setProperty( key, value )";
 	}
 	my $oldValue = $self->{'properties'}{ $key };
 	$self->{'properties'}{ $key } = $value;
@@ -51,7 +54,7 @@ sub setFormat {
 	my $self = shift;
 	my $format = shift;
 	unless(defined($format) && length($format)) {
-		die "Config::Properties.format( string )";
+		croak "Config::Properties.format( string )";
 	}
 	$self->{'format'} = $format;
 }
@@ -74,16 +77,71 @@ sub getFormat {
 	return $self->{'format'};
 }
 
+#       setValidator(\&validator) - Set sub to be called to validate
+#                property/value pairs.
+#                It is called &validator($property, $value, $config)
+#                being $config the Config::Properties object.
+sub setValidator {
+        my $self = shift;
+        my $validator = shift;
+	if (defined($validator) && !UNIVERSAL::isa($validator, 'CODE')) {
+	        croak "Config::Properties.setValidator( \&validator )"
+	}
+	$self->{validator} = $validator;
+}
+
+#       getValidator() - Return the current validator sub
+sub getValidator {
+        my $self=shift;
+	return $self->{validator}
+}
+
+#       validator() - Alias for get/setValidator();
+sub validator {
+        my $self=shift;
+	if (@_) {
+	        return $self->{validator}=shift;
+	}
+	$self->{validator}
+}
+
 #	load() - Load the properties from a filehandle
 sub load {
 	my $self = shift;
 	my $file = shift;
 	unless(defined($file)) {
-		die "Config::Properties.load( file )";
+		croak "Config::Properties.load( file )";
 	}
 	while (<$file>) {
+	        $self->{line_number}=$file->input_line_number;
 		$self->process_line($_, $file);
 	}
+}
+
+#        escape_key(string), escape_value(string), unescape(string) -
+#               subroutines to convert escaped characters to their
+#               real counterparts back and forward.
+
+my %esc = ( "\n" => 'n',
+	    "\r" => 'r',
+	    "\t" => 't' );
+my %unesc = reverse %esc;
+
+sub escape_key {
+    $_[0]=~s{([\t\n\r\\"' =:])}{
+	"\\".($esc{$1}||$1) }ge;
+    $_[0]=~s{([^\x20-\x7e])}{sprintf "\\u%04x", ord $1}ge;
+}
+
+sub escape_value {
+    $_[0]=~s{([\t\n\r\\])}{
+	"\\".($esc{$1}||$1) }ge;
+    $_[0]=~s{([^\x20-\x7e])}{sprintf "\\u%04x", ord $1}ge;
+}
+
+sub unescape {
+    $_[0]=~s/\\([tnr\\"' =:])|u([\da-fA-F]{4})/
+	defined $1 ? $unesc{$1}||$1 : chr hex $2 /ge;
 }
 
 #	process_line() - Recursive function used to parse a line from the
@@ -94,9 +152,9 @@ sub process_line {
 	my $line = shift;
 	my $file = shift;
 	unless(defined($line) && defined($file)) {
-		die "Config::Properties.process_line( line, file )";
+		croak "Config::Properties.process_line( line, file )";
 	}
-	$line =~ s/\015?\012$//;
+	chomp $line;
 	if ($line =~ /^\s*(\#|\!|$)/) {
 	 	return;
 	}
@@ -106,45 +164,48 @@ sub process_line {
 		$newline =~ s/^\s*//;
 		return $self->process_line($line . $newline, $file);
 	}
-
 	#print "XXX: " . $line . "\n";
-	$line =~ /^\s*([^\s:=]+)(\s*|\s*(\:|\=|\s)\s*(.*?))$/;
-	#print "1: $1 2: $2 3: $3 4: $4\n";
-	unless(defined($1) && length($1)) {
-		die "Config::Properties.process_line: invalid property line";
-	}
-
-	#$properties{ $1 } = ($4 || "");
-	#the javadoc for Properties states that both the name and value
-	#can be escaped. The regex above will break though if ':','=', or
-	#whitespace are included.
-	$self->{'properties'}{ unescape($1) } = (defined($4) && length($4)) ? unescape($4) : ''; # Value ($4) may be '0' !
+	my ($key, $value) = $line =~ /^
+				      \s*
+				      ((?:[^\s:=\\]|\\.)+)
+				      \s*
+				      [:=\s]
+				      \s*
+				      (.*)
+				      $
+				      /x
+	        or $self->fail("invalid property line '$line'");
+	
+	unescape $key;
+	unescape $value;
+	$self->{properties}{$key} =
+	        $self->validate($key, $value);
 }
 
-#	unescape() - converts escaped characters to their real counterparts.
-sub unescape {
-	my $value = shift;
+#       validate(key, value) - check if the property is valid.
+#               calls the validator if it has been set.
+sub validate {
+    my $self = shift;
+    my $key = shift;
+    my $value = shift;
+    my $validator = $self->validator;
+    if ($validator) {
+	return &{$validator}($key, $value, $self)
+    }
+    $value;
+}
 
-	while ($value =~ m/\\(.)/g) {
-		my $result = $1;
+#       line_number() - number for the last line read from the configuration file
+sub line_number {
+    my $self=shift;
+    return $self->{line_number}
+}
 
-		if ($result eq 't') {
-	 	    $result = "\t";
-	 	} elsif ($result eq 'n') {
-	 	    $result = "\n";
-	 	} elsif ($result eq 'r') {
-	 	    $result = "\r";
-	 	} elsif ($result eq 's') {
-	 	    $result = ' ';
-	 	}
-
-	 	my $start = (pos $value) - 2;
-	 	pos $value = $start;
-	 	$value =~ s/\\./$result/;
-	 	pos $value = ($start + 1);
-	}
-
-	return $value;
+#       fail(error) - report errors in the configuration file while reading.
+sub fail {
+        my $self=shift;
+	my $error=shift;
+	die "$error at line ".$self->line_number()."\n";
 }
 
 #	reallySave() - Utility function that performs the actual saving of
@@ -154,10 +215,13 @@ sub reallySave {
 	my $self = shift;
 	my $file = shift;
 	unless(defined($file)) {
-		die "Config::Properties.reallySave( file )";
+		croak "Config::Properties.reallySave( file )";
 	}
-	foreach (keys %{$self->{properties}}) {
-		printf $file $self->{'format'} . "\n", $_, $self->{properties}{$_};
+	foreach (sort keys %{$self->{properties}}) {
+	        my ($key, $value)=($_, $self->{properties}{$_});
+		escape_key $key;
+		escape_value $value;
+		printf $file $self->{'format'} . "\n", $key, $value;
 	}
 }
 
@@ -168,7 +232,7 @@ sub save {
 	my $file = shift;
 	my $header = shift;
 	unless(defined($file) && defined($header) && length($header)) {
-	 die "Config::Properties.save( file, header )";
+	 croak "Config::Properties.save( file, header )";
 	}
 	print $file "#$header\n";
 	print $file '#' . localtime() . "\n";
@@ -188,7 +252,7 @@ sub getProperty {
 	my $key = shift;
 	my $default = shift;
 	unless(defined($key) && length($key)) { # Key can be '0'!
-		die "Config::Properties.getProperty( key )";
+		croak "Config::Properties.getProperty( key )";
 	}
 	my $value = $self->{properties}{ $key };
 	if ($self->{defaults} && !defined($value)) { # Value can be '0' or empty string!
@@ -207,7 +271,7 @@ sub propertyNames {
 #		Meant for debugging use.
 sub list {
 	my $self = shift;
-	my $file = shift or die "Config::Properties.list( file )";
+	my $file = shift or croak "Config::Properties.list( file )";
 	print $file "-- listing properties --";
 	$self->reallySave( $file );
 }
@@ -263,7 +327,7 @@ line is counted as part of the current line (minus the backslash, any whitespace
 after the backslash, the line break, and any whitespace at the beginning of the next line).
 
 The official references used to determine this format can be found in the Java API docs
-for java.util.Properties at http://java.sun.com/j2se/1.3/docs/api/index.html.
+for java.util.Properties at L<http://java.sun.com/j2se/1.3/docs/api/index.html>.
 
 When a property file is saved it is in the format "key=value" for each line. This can
 be changed by setting the format attribute using either $object->format( $format_string ) or
