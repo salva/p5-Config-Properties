@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.58';
+our $VERSION = '0.59';
 
 use IO::Handle;
 use Carp;
@@ -48,22 +48,13 @@ use Carp;
 #   which is an instance of Config::Properties to be used as defaults
 #   for this object.
 sub new {
-    my $proto = shift;
-    my $defaultProperties = shift;
+    my ($class, $defaults)=@_;
 
-    @_ and carp "use of PerlMode flag is deprecated";
-    my $perlMode = shift;
-
-    ref($proto)
-	and carp "creating new Config::Properties objects from prototypes is deprecated";
-
-    my $class = ref($proto) || $proto;
-    my $self = { PERL_MODE => $perlMode ? 1 : 0,
-		 defaults => $defaultProperties,
+    my $self = { defaults => $defaults,
 		 format => '%s=%s',
 		 properties => {},
-		 sorter => 1,
-		 sorted_keys => {} };
+		 next_line_number => 1,
+		 property_line_numbers => {} };
     bless $self, $class;
 
     return $self;
@@ -72,10 +63,10 @@ sub new {
 # set property only if its going to change the property value.
 #
 sub changeProperty {
-    my ($self, $key, $new, @default) = @_;
+    my ($self, $key, $new, @defaults) = @_;
     _t_key $key;
     _t_value $new;
-    my $old=$self->getProperty($key, @default);
+    my $old=$self->getProperty($key, @defaults);
     if ($old ne $new) {
 	$self->setProperty($key, $new);
 	return 1;
@@ -89,7 +80,7 @@ sub deleteProperty {
 
     if (exists $self->{properties}{$key}) {
       delete $self->{properties}{$key};
-      delete $self->{sorted_keys}{$key};
+      delete $self->{property_line_numbers}{$key};
     }
 
     $self->{defaults}->deleteProperty($key, 1)
@@ -105,7 +96,7 @@ sub setProperty {
     defined(wantarray) and
 	carp "warning: setProperty doesn't return the old value anymore";
 
-    $self->{sorted_keys}{$key} ||= $self->{sorter}++;
+    $self->{property_line_numbers}{$key} ||= $self->{next_line_number}++;
     $self->{properties}{$key} = $value;
 }
 
@@ -121,7 +112,6 @@ sub properties {
 
 #	getProperties() - Return a hashref of all of the properties
 sub getProperties { return { shift->properties }; }
-# sub getProperties { my $r={ shift->properties }; return $r; }
 
 
 #	getFormat() - Return the output format for the properties
@@ -147,9 +137,10 @@ sub format {
 
 
 #       setValidator(\&validator) - Set sub to be called to validate
-#                property/value pairs.
-#                It is called &validator($property, $value, $config)
-#                being $config the Config::Properties object.
+#                property/value pairs.  It is called
+#                &validator($property, $value, $config) being $config
+#                the Config::Properties object.  $property and $key
+#                can be modified by the validator via $_[0] and $_[1]
 sub setValidator {
     my ($self, $validator) = @_;
     _t_validator $validator;
@@ -175,6 +166,9 @@ sub validator {
 sub load {
     my ($self, $file) = @_;
     _t_file $file;
+    $self->{properties}={};
+    $self->{property_line_numbers}={};
+    $self->{next_line_number}=1;
     1 while $self->process_line($file);
 }
 
@@ -217,7 +211,7 @@ sub process_line {
 
     defined $line or return undef;
     $line =~ /^\s*(\#|\!|$)/ and return 1;
-    $self->{line_number}=$file->input_line_number;
+    my $ln=$self->{line_number}=$file->input_line_number;
     $line =~ s/\x0D*\x0A$//;
 
     # handle continuation lines
@@ -244,22 +238,23 @@ sub process_line {
 	
     unescape $key;
     unescape $value;
-    $self->{sorted_keys}{$key} = $self->{sorter}++;
-    $self->{properties}{$key} =
-	$self->validate($key, $value);
+
+    $self->validate($key, $value);
+
+    $self->{property_line_numbers}{$key} = $ln;
+    $self->{next_line_number}=$ln+1;
+
+    $self->{properties}{$key} = $value;
 
     return 1;
 }
 
-#       validate(key, value) - check if the property is valid.
-#               calls the validator if it has been set.
 sub validate {
-    my ($self, $key, $value)=@_;
-    my $validator = $self->validator;
-    if ($validator) {
-	return &{$validator}($key, $value, $self)
+    my $self=shift;
+    my $validator = $self->{validator};
+    if (defined $validator) {
+	&{$validator}(@_, $self) or $self->fail("invalid value '$_[1]' for '$_[0]'");
     }
-    $value;
 }
 
 
@@ -293,7 +288,7 @@ sub _save {
     local($Text::Wrap::huge)='overflow';
     local($Text::Wrap::break)=qr/(?<!\\) (?! )/;
 
-    my $sk=$self->{sorted_keys};
+    my $sk=$self->{property_line_numbers};
     foreach (sort { $sk->{$a} <=> $sk->{$b} } keys %{$self->{properties}}) {
 	my $key=$_;
 	my $value=$self->{properties}{$key};
@@ -348,7 +343,7 @@ sub getProperty {
     for (@_) {
 	return $_ if defined $_
     }
-    return undef
+    undef
 }
 
 sub requireProperty {
@@ -359,6 +354,11 @@ sub requireProperty {
     return $prop;
 }
 
+sub _property_line_number {
+    my ($self, $key)=@_;
+    $self->{property_line_numbers}{$key}
+}
+
 
 #	propertyName() - Returns an array of the keys of the Properties
 sub propertyNames {
@@ -366,30 +366,6 @@ sub propertyNames {
     keys %p;
 }
 
-
-#	list() - Same as store() except that it doesn't include a header.
-#		Meant for debugging use.
-sub list {
-    my ($self, $file) = @_;
-    _t_file $file;
-
-    print $file "# -- listing properties --";
-    $self->_save( $file );
-}
-
-#	setPerlMode() - Sets the value (true/false) of the PERL_MODE parameter.
-sub setPerlMode {
-    my ($self, $mode) = @_;
-    carp "use of PerlMode flag is deprecated";
-    return $self->{'PERL_MODE'} = (defined($mode) && $mode) ? 1 : 0;
-}
-
-#	perlMode() - Returns the current PERL_MODE setting (Default is false)
-sub perlMode {
-    my $self = shift;
-    carp "use of PerlMode flag is deprecated";
-    return $self->{'PERL_MODE'};
-}
 
 1;
 __END__
@@ -445,7 +421,7 @@ at the beginning of the next line).
 
 The official references used to determine this format can be found in
 the Java API docs for java.util.Properties at
-L<http://java.sun.com/j2se/1.3/docs/api/index.html>.
+L<http://java.sun.com/j2se/1.5.0/docs/api/java/util/Properties.html>.
 
 When a property file is saved it is in the format "key=value" for each
 line. This can be changed by setting the format attribute using either
@@ -458,29 +434,8 @@ can be anything else. A newline will be automatically added to the end
 of the string. You an get the current format string either by using
 $object->format() (with no arguments) or $object->getFormat().
 
-=over 4
-
-*** DEPRECATED!!! ***
-
-If a true third parameter is passed to the constructor, the
-Config::Properties object be created in PERL_MODE. This can be set at
-any time by passing a true or false value into the setPerlMode()
-instance method. If in PERL_MODE, the behavior of the object may be
-expanded, enhanced and/or just plain different than the Java API spec.
-
-The following is a list of the current behavior changed under PERL_MODE:
-
-* Ummm... nothing yet.
-
-The current (true/false) value of PERL_MODE can be retrieved with the
-perlMode instance variable.
-
---- As PERL_MODE has not ever done anything its usage has been
-deprecated ---
-
-*** DEPRECATED!!! ***
-
-=back
+If a recent version of module L<Text::Wrap> is available, long lines
+are conveniently wrapped when saving.
 
 =head1 METHODS
 
@@ -547,15 +502,17 @@ returns a flatten hash with all the property key/value pairs, i.e.:
 
 =item $p-E<gt>getProperties
 
-returns a hash reference with all the properties.
+returns a hash reference with all the properties (including those passed as defaults).
 
 =item $p-E<gt>propertyNames;
 
-returns the names of all the properties.
+returns the names of all the properties (including those passed as defaults).
 
 =item $p-E<gt>load($file)
 
-loads its properties from the open file C<$file>.
+loads properties from the open file C<$file>.
+
+Old properties on the object are forgotten.
 
 =item $p-E<gt>save($file)
 
@@ -587,7 +544,17 @@ L<Config::Properties>.
 =head1 AUTHORS
 
 C<Config::Properties> was originally developed by Randy Jay Yarger. It
-was mantained for some time by Craig Manley and recently it has passed
-hands to Salvador Fandiño <sfandino@yahoo.com>.
+was mantained for some time by Craig Manley and finally it passed
+hands to Salvador FandiE<ntilde>o <sfandino@yahoo.com>, its current
+maintainer.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2001, 2002 by Randy Jay Yarger
+Copyright 2002, 2003 by Craig Manley.
+Copyright 2003, 2004, 2005 by Salvador FandiE<ntilde>o.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut

@@ -1,3 +1,4 @@
+# -*- Mode: Perl -*-
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 1.t'
 
@@ -10,12 +11,7 @@ my $cfg=Config::Properties->new();
 my %valid = map { $_=> 1 }
     qw ( foo Bar eq=ua:l more cra\n=:\ \\z'y' );
 
-$cfg->setValidator( sub {
-			my ($key, $value, $cfg)=@_;
-			$valid{$key}
-			    or $cfg->fail("invalid property $key");
-			$value;
-		    } );
+$cfg->setValidator( sub { $valid{shift()} } );
 
 eval {
     $cfg->load(\*DATA);

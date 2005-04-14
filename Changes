@@ -1,8 +1,21 @@
 Revision history for Perl extension Config::Properties.
 
+0.59  Apr 14 2005
+	- remove old unused deprecated features PERL_MODE and object
+	  creation from prototype.
+	- remove undocumented redundant list function.
+	- remove deprecated perlMode and setPerlMode functions.
+	- change validator processing, to allow for key redefinition.
+	- remembers key line numbers for expressive duplicate error
+	  reports.
+	- empty properties before loading new file.
+	- improve docs.
+	- license notice added to the docs.
+
 0.58  Sep 16 2004
 	- on getProperty methods admit several defaults and take the
 	  first defined one.
+	- new requireProperty method
 
 0.57  May 07 2004
 	- retain properties read/construction order when saving
@@ -20,7 +33,7 @@ Revision history for Perl extension Config::Properties.
 	- new method deleteProperty
 	- propertyNames now also returns names from default properties
 	- getProperties now also returns default properties
-	- new properties method returning a flated hash with all the
+	- new properties method returning a flatten hash with all the
 	  properties added
 	- getProperty doesn't return the old value anymore... anyway
 	  it's implementation was always broken!
