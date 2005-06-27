@@ -1,5 +1,10 @@
 Revision history for Perl extension Config::Properties.
 
+
+0.60  Jun 27 2005
+	- handle utf8 byte marks (bug reported by Trent Wood).
+	- doc typos corrected
+
 0.59  Apr 14 2005
 	- remove old unused deprecated features PERL_MODE and object
 	  creation from prototype.

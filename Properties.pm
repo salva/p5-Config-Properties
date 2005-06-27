@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.59';
+our $VERSION = '0.60';
 
 use IO::Handle;
 use Carp;
@@ -210,8 +210,12 @@ sub process_line {
     my $line=<$file>;
 
     defined $line or return undef;
-    $line =~ /^\s*(\#|\!|$)/ and return 1;
     my $ln=$self->{line_number}=$file->input_line_number;
+    # remove utf8 byte order mark
+    $line =~ s/^[\x{FEFF}\x{FFFE}]// if $ln == 1;
+    # ignore comments
+    $line =~ /^\s*(\#|\!|$)/ and return 1;
+
     $line =~ s/\x0D*\x0A$//;
 
     # handle continuation lines
@@ -478,8 +482,8 @@ An example shows why it is useful:
   $defaults->setProperty(foo => 'bar');
 
   my $p1=Config::Properties->new($defaults);
-  $p2->setProperty(foo => 'bar');
-  $p2->store(FILE1); foo gets saved on the file
+  $p1->setProperty(foo => 'bar');   # we set here!
+  $p1->store(FILE1); foo gets saved on the file
 
   my $p2=Config::Properties->new($defaults);
   $p2->changeProperty(foo => 'bar'); # does nothing!
