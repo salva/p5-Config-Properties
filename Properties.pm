@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.60';
+our $VERSION = '0.61';
 
 use IO::Handle;
 use Carp;
@@ -212,7 +212,7 @@ sub process_line {
     defined $line or return undef;
     my $ln=$self->{line_number}=$file->input_line_number;
     # remove utf8 byte order mark
-    $line =~ s/^[\x{FEFF}\x{FFFE}]// if $ln == 1;
+    $line =~ s/^(?:\x{FEFF}|{FFFE})// if $ln == 1;
     # ignore comments
     $line =~ /^\s*(\#|\!|$)/ and return 1;
 

@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+0.61  Jul 27 2005
+	- the regular expression used to remove utf8 byte order marks
+	  was failing on 5.6.x due to a perl bug (reported by Dominik
+	  Stadler).
 
 0.60  Jun 27 2005
 	- handle utf8 byte marks (bug reported by Trent Wood).
