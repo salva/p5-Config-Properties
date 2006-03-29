@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.61';
+our $VERSION = '0.62';
 
 use IO::Handle;
 use Carp;
@@ -326,6 +326,64 @@ sub save {
     $self->_save( $file );
 }
 
+sub saveToString {
+    my $self = shift;
+    my $str; # = '';
+    open my $fh, '>', \$str
+	or die "unable to open string ref as file";
+    $self->save($fh, @_);
+    close $fh
+	or die "unable to write to in memory file";
+    return $str;
+}
+
+sub _split_to_tree {
+    my ($self, $tree, $re) = @_;
+    if (defined $self->{defaults}) {
+	$self->{defaults}->_split_to_tree($tree, $re);
+    }
+    for my $key (keys %{$self->{properties}}) {
+	my @parts = split $re, $key;
+	@parts = '' unless @parts;
+	my $t = $tree;
+	while (@parts) {
+	    my $part = shift @parts;
+	    my $old = $t->{$part};
+
+	    if (@parts) {
+		if (defined $old) {
+		    if (ref $old) {
+			$t = $old;
+		    }
+		    else {
+			$t = $t->{$part} = { '' => $old };
+		    }
+		}
+		else {
+		    $t = $t->{$part} = {};
+		}
+	    }
+	    else {
+		my $value = $self->{properties}{$key};
+		if (ref $old) {
+		    $old->{''} = $value;
+		}
+		else {
+		    $t->{$part} = $value;
+		}
+	    }
+	}
+    }
+}
+
+sub splitToTree {
+    my ($self, $re) = @_;
+    $re = qr/\./ unless defined $re;
+    $re = qr/$re/ unless ref $re;
+    my $tree = {};
+    $self->_split_to_tree($tree, $re);
+    $tree;
+}
 
 #	store() - Synonym for save()
 sub store { shift->save(@_) }
@@ -512,6 +570,35 @@ returns a hash reference with all the properties (including those passed as defa
 
 returns the names of all the properties (including those passed as defaults).
 
+=item $p-E<gt>splitToTree()
+
+=item $p-E<gt>splitToTree($regexp)
+
+builds a tree from the properties, splitting the keys with the regular
+expression C<$re> (or C</\./> by default). For instance:
+
+  my $data = <<EOD;
+  name = pete
+  date.birth = 1958-09-12
+  date.death = 2004-05-11
+  surname = moo
+  surname.length = 3
+  EOD
+
+  open my $fh, '<', \$data;
+  $cfg->load();
+  my $tree = $cfg->splitToTree();
+
+makes...
+
+  $tree = { date => { birth => '1958-09-12',
+                      death => '2004-05-11' },
+            name => 'pete',
+            surname => { '' => 'moo',
+                         length => '3' } };
+
+
+
 =item $p-E<gt>load($file)
 
 loads properties from the open file C<$file>.
@@ -526,8 +613,13 @@ Old properties on the object are forgotten.
 
 =item $p-E<gt>store($file, $header)
 
-Save to the open file C<$file> the properties on the object. Default
-properties are not saved.
+save the properties to the open file C<$file>. Default properties are
+not saved.
+
+=item $p-E<gt>saveToString($header)
+
+similar to C<save>, but instead of saving to a file, it returns a
+string with the content.
 
 =item $p-E<gt>getFormat()
 
@@ -556,7 +648,7 @@ maintainer.
 
 Copyright 2001, 2002 by Randy Jay Yarger
 Copyright 2002, 2003 by Craig Manley.
-Copyright 2003, 2004, 2005 by Salvador FandiE<ntilde>o.
+Copyright 2003-2006 by Salvador FandiE<ntilde>o.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
