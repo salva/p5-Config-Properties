@@ -1,5 +1,8 @@
 Revision history for Perl extension Config::Properties.
 
+0.63  Mar 30 2006
+	- silly bug on test file removed
+
 0.62  Mar 29 2006
 	- add support for saveToString and splitToTree methods
 	  (suggested by Clayton Scott).
