@@ -1,5 +1,12 @@
 Revision history for Perl extension Config::Properties.
 
+0.65  Sep 8 2006
+        - add setFromTree and changeFromTree methods as requested by
+          Nito.
+
+0.64  Jul 26 2006
+        - add support for start parameter to splitToTree method.
+
 0.63  Mar 30 2006
 	- silly bug on test file removed
 

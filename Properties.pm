@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.63';
+our $VERSION = '0.65';
 
 use IO::Handle;
 use Carp;
@@ -338,12 +338,18 @@ sub saveToString {
 }
 
 sub _split_to_tree {
-    my ($self, $tree, $re) = @_;
+    my ($self, $tree, $re, $start) = @_;
     if (defined $self->{defaults}) {
 	$self->{defaults}->_split_to_tree($tree, $re);
     }
     for my $key (keys %{$self->{properties}}) {
-	my @parts = split $re, $key;
+        my $ekey = $key;
+
+        if (defined $start) {
+            $ekey =~ s/$start// or next;
+        }
+
+	my @parts = split $re, $ekey;
 	@parts = '' unless @parts;
 	my $t = $tree;
 	while (@parts) {
@@ -377,13 +383,43 @@ sub _split_to_tree {
 }
 
 sub splitToTree {
-    my ($self, $re) = @_;
+    my ($self, $re, $start) = @_;
     $re = qr/\./ unless defined $re;
     $re = qr/$re/ unless ref $re;
+    if (defined $start) {
+        $start = quotemeta $start;
+        $start = qr/^$start$re/
+    }
     my $tree = {};
-    $self->_split_to_tree($tree, $re);
+    $self->_split_to_tree($tree, $re, $start);
     $tree;
 }
+
+sub _unsplit_from_tree {
+    my ($self, $method, $tree, $sep, @start) = @_;
+    $sep = '.' unless defined $sep;
+    my $ref = ref $tree;
+    if ($ref eq 'HASH') {
+        for my $key (keys %$tree) {
+            $self->_unsplit_from_tree($method, $tree->{$key}, $sep,
+                               @start, ($key ne '' ? $key : ()))
+        }
+    }
+    elsif ($ref eq 'ARRAY') {
+        for my $key (0..$#$tree) {
+            $self->_unsplit_from_tree($method, $tree->[$key], $sep, @start, $key)
+        }
+    }
+    elsif ($ref) {
+        croak "unexpected object '$ref' found inside tree"
+    }
+    else {
+        $self->$method(join($sep, @start), $tree)
+    }
+}
+
+sub setFromTree { shift->_unsplit_from_tree(setProperty => @_) }
+sub changeFromTree { shift->_unsplit_from_tree(changeProperty => @_) }
 
 #	store() - Synonym for save()
 sub store { shift->save(@_) }
@@ -574,6 +610,8 @@ returns the names of all the properties (including those passed as defaults).
 
 =item $p-E<gt>splitToTree($regexp)
 
+=item $p-E<gt>splitToTree($regexp, $start)
+
 builds a tree from the properties, splitting the keys with the regular
 expression C<$re> (or C</\./> by default). For instance:
 
@@ -597,6 +635,60 @@ makes...
             surname => { '' => 'moo',
                          length => '3' } };
 
+
+
+The C<$start> parameter allows to split only a subset of the
+properties. For instance, with the same data as on the previous
+example:
+
+   my $subtree = $cfg->splitToTree(qr/\./, 'date');
+
+makes...
+
+  $tree = { birth => '1958-09-12',
+            death => '2004-05-11' };
+
+=item $p-E<gt>setFromTree($tree)
+
+=item $p-E<gt>setFromTree($tree, $separator)
+
+=item $p-E<gt>setFromTree($tree, $separator, $start)
+
+This method sets properties from a tree of Perl hashes and arrays. It
+is the opposite to splitToTree.
+
+C<$separator> is the string used to join the parts of the property
+names. The default value is a dot (C<.>).
+
+C<$start> is a string used as the starting point for the property
+names.
+
+For instance:
+
+  my $c = Config::Properties->new;
+  $c->setFromTree( { foo => { '' => one,
+                              hollo => [2, 3, 4, 1] },
+                     bar => 'doo' },
+                   '->',
+                   'mama')
+
+  # sets properties:
+  #      mama->bar = doo
+  #      mama->foo = one
+  #      mama->foo->hollo->0 = 2
+  #      mama->foo->hollo->1 = 3
+  #      mama->foo->hollo->2 = 4
+  #      mama->foo->hollo->3 = 1
+
+
+=item $p-E<gt>changeFromTree($tree)
+
+=item $p-E<gt>changeFromTree($tree, $separator)
+
+=item $p-E<gt>changeFromTree($tree, $separator, $start)
+
+similar to C<setFromTree> but internally uses C<changeProperty>
+instead of C<setProperty> to set the property values.
 
 
 =item $p-E<gt>load($file)
