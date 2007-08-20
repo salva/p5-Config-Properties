@@ -1,5 +1,13 @@
 Revision history for Perl extension Config::Properties.
 
+1.67  Aug 20, 2007
+        - splitToTree was not handling defaults properly (bug report
+          and patch submitted by Filip Chodounsky)
+
+1.66  Sep 8 2006
+        - this module is very stable now, use 1.x version numbers to
+          reflect it.
+
 0.65  Sep 8 2006
         - add setFromTree and changeFromTree methods as requested by
           Nito.

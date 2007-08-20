@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '0.65';
+our $VERSION = '1.67';
 
 use IO::Handle;
 use Carp;
@@ -340,7 +340,7 @@ sub saveToString {
 sub _split_to_tree {
     my ($self, $tree, $re, $start) = @_;
     if (defined $self->{defaults}) {
-	$self->{defaults}->_split_to_tree($tree, $re);
+	$self->{defaults}->_split_to_tree($tree, $re, $start);
     }
     for my $key (keys %{$self->{properties}}) {
         my $ekey = $key;
@@ -733,7 +733,7 @@ L<Config::Properties>.
 
 C<Config::Properties> was originally developed by Randy Jay Yarger. It
 was mantained for some time by Craig Manley and finally it passed
-hands to Salvador FandiE<ntilde>o <sfandino@yahoo.com>, its current
+hands to Salvador FandiE<ntilde>o <sfandino@yahoo.com>, the current
 maintainer.
 
 =head1 COPYRIGHT AND LICENSE

@@ -1,13 +1,14 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Config-Properties
-version:      0.65
-version_from: Properties.pm
-installdirs:  site
-requires:
+--- #YAML:1.0
+name:                Config-Properties
+version:             1.67
+abstract:            ~
+license:             ~
+generated_by:        ExtUtils::MakeMaker version 6.32
+distribution_type:   module
+requires:     
     File::Temp:                    0
     Test::More:                    0
     Text::Wrap:                    2001.0929
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30_01
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
