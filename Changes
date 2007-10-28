@@ -1,19 +1,25 @@
 Revision history for Perl extension Config::Properties.
 
+1.68  Oct 27, 2007
+    - the regular expresion used to detect unicode BOM was not correct
+    - work around unicode bug in perl 5.6.0
+    - require perl 5.6.0 in Makefile.PL
+    - test pods
+
 1.67  Aug 20, 2007
-        - splitToTree was not handling defaults properly (bug report
-          and patch submitted by Filip Chodounsky)
+    - splitToTree was not handling defaults properly (bug report
+      and patch submitted by Filip Chodounsky)
 
 1.66  Sep 8 2006
-        - this module is very stable now, use 1.x version numbers to
-          reflect it.
+    - this module is very stable now, use 1.x version numbers to
+      reflect it.
 
 0.65  Sep 8 2006
-        - add setFromTree and changeFromTree methods as requested by
-          Nito.
+    - add setFromTree and changeFromTree methods as requested by
+      Nito.
 
 0.64  Jul 26 2006
-        - add support for start parameter to splitToTree method.
+    - add support for start parameter to splitToTree method.
 
 0.63  Mar 30 2006
 	- silly bug on test file removed
@@ -28,7 +34,7 @@ Revision history for Perl extension Config::Properties.
 	  Stadler).
 
 0.60  Jun 27 2005
-	- handle utf8 byte marks (bug reported by Trent Wood).
+	- handle utf8 BOM (bug reported by Trent Wood).
 	- doc typos corrected
 
 0.59  Apr 14 2005
@@ -66,7 +72,7 @@ Revision history for Perl extension Config::Properties.
 	- getProperties now also returns default properties
 	- new properties method returning a flatten hash with all the
 	  properties added
-	- getProperty doesn't return the old value anymore... anyway
+	- setProperty doesn't return the old value anymore... anyway
 	  it's implementation was always broken!
 	- parameter checking changed to use some common functions
 

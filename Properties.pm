@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.67';
+our $VERSION = '1.68';
 
 use IO::Handle;
 use Carp;
@@ -205,14 +205,20 @@ sub unescape {
 
 
 #	process_line() - read and parse a line from the properties file.
+
+# this is to workaround a bug in perl 5.6.0 related to unicode
+my $bomre = eval(q< qr/^\\x{FEFF}/ >) || qr//;
+
 sub process_line {
     my ($self, $file) = @_;
     my $line=<$file>;
 
     defined $line or return undef;
     my $ln=$self->{line_number}=$file->input_line_number;
-    # remove utf8 byte order mark
-    $line =~ s/^(?:\x{FEFF}|{FFFE})// if $ln == 1;
+    if ($ln == 1) {
+        # remove utf8 byte order mark
+        $line =~ s/$bomre//;
+    }
     # ignore comments
     $line =~ /^\s*(\#|\!|$)/ and return 1;
 

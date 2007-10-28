@@ -1,9 +1,9 @@
 --- #YAML:1.0
 name:                Config-Properties
-version:             1.67
+version:             1.68
 abstract:            ~
 license:             ~
-generated_by:        ExtUtils::MakeMaker version 6.32
+generated_by:        ExtUtils::MakeMaker version 6.36
 distribution_type:   module
 requires:     
     File::Temp:                    0
