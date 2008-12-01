@@ -1,4 +1,4 @@
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 use Config::Properties;
 use File::Temp qw(tempfile);
@@ -24,7 +24,11 @@ $contents=<CFG>;
 # print STDERR "$fn\n$contents\n";
 
 ok($contents=~/uno.*tres.*cuatro.*cinco/s,
-   "order preserved")
+   "order preserved");
+
+unlink $fn;
+
+ok((not -e $fn), "delete test file");
 
 __DATA__
 

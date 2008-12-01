@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+1.69  Dec 1, 2008
+    - Delete temporal files created on tests (bug report by
+      Andreas Koenig)
+
 1.68  Oct 27, 2007
     - the regular expresion used to detect unicode BOM was not correct
     - work around unicode bug in perl 5.6.0
