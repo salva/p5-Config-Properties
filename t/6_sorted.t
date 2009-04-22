@@ -1,4 +1,4 @@
-use Test::More tests => 2;
+use Test::More tests => 4;
 
 use Config::Properties;
 use File::Temp qw(tempfile);
@@ -14,12 +14,13 @@ $cfg->setProperty('cinco', '5');
 $cfg->setProperty('tres', '6!');
 
 $cfg->store($fh, "test header");
-close $fh;
+ok(close($fh), "config write");
 open CFG, '<', $fn
     or die "unable to open tempory file $fn";
 
 undef $/;
 $contents=<CFG>;
+ok(close(CFG), "config read");
 
 # print STDERR "$fn\n$contents\n";
 

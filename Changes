@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+1.70  Apr 22, 2009
+    - Solve bug in testing file 6_sorted.t (bug report and patch by
+      Ian Malpass)
+
 1.69  Dec 1, 2008
     - Delete temporal files created on tests (bug report by
       Andreas Koenig)
