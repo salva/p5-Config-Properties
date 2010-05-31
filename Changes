@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+1.71  May 31, 2009
+    - changeProperties was generating a warning when the former value
+      was undef (bug report by Jony Salonen)
+
 1.70  Apr 22, 2009
     - Solve bug in testing file 6_sorted.t (bug report and patch by
       Ian Malpass)

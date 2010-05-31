@@ -3,39 +3,39 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.70';
+our $VERSION = '1.71';
 
 use IO::Handle;
 use Carp;
 
 {
     no warnings;
-    sub _t_key($) {
+    sub _t_key ($) {
 	my $k=shift;
 	defined($k) && length($k)
 	    or croak "invalid property key '$k'";
     }
 
-    sub _t_value($) {
+    sub _t_value ($) {
 	my $v=shift;
 	defined $v
 	    or croak "undef is not a valid value for a property";
     }
 
-    sub _t_format($) {
+    sub _t_format ($) {
 	my $f=shift;
 	defined ($f) && $f=~/\%s.*\%s/
 	    or croak "invalid format '%f'";
     }
 
-    sub _t_validator($) {
+    sub _t_validator ($) {
 	my $v=shift;
 	defined($v) &&
 	    UNIVERSAL::isa($v, 'CODE') or
 		croak "invalid property validator '$v'";
     }
 
-    sub _t_file($) {
+    sub _t_file ($) {
 	my $f=shift;
 	defined ($f) or
 	    croak "invalid file '$f'";
@@ -48,7 +48,7 @@ use Carp;
 #   which is an instance of Config::Properties to be used as defaults
 #   for this object.
 sub new {
-    my ($class, $defaults)=@_;
+    my ($class, $defaults) = @_;
 
     my $self = { defaults => $defaults,
 		 format => '%s=%s',
@@ -67,7 +67,7 @@ sub changeProperty {
     _t_key $key;
     _t_value $new;
     my $old=$self->getProperty($key, @defaults);
-    if ($old ne $new) {
+    if (!defined $old or $old ne $new) {
 	$self->setProperty($key, $new);
 	return 1;
     }
