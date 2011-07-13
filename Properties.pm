@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.71';
+our $VERSION = '1.72';
 
 use IO::Handle;
 use Carp;
@@ -562,11 +562,11 @@ printf and must contain exactly two %s format characters. The first
 will be replaced with the key of the property and the second with the
 value. The string can contain no other printf control characters, but
 can be anything else. A newline will be automatically added to the end
-of the string. You an get the current format string either by using
+of the string. The current format string can be obtained by using
 $object->format() (with no arguments) or $object->getFormat().
 
-If a recent version of module L<Text::Wrap> is available, long lines
-are conveniently wrapped when saving.
+If a recent version of L<Text::Wrap> is available, long lines are
+conveniently wrapped when saving.
 
 =head1 METHODS
 
@@ -574,7 +574,7 @@ C<Config::Property> objects have this set of methods available:
 
 =over 4
 
-=item Config::Properties-E<gr>new(%opts)
+=item Config::Properties-E<gt>new(%opts)
 
 Creates a new Config::Properties object.
 
