@@ -48,7 +48,16 @@ use Carp;
 #   which is an instance of Config::Properties to be used as defaults
 #   for this object.
 sub new {
-    my ($class, $defaults) = @_;
+    my $class = shift;
+    my $defaults = shift;
+
+    if (defined $defaults and ref $defaults eq 'HASH') {
+        my $d = Config::Properties->new;
+        while (my ($k, $v) = each %$defaults) {
+            $d->setProperty($k, $v);
+        }
+        $defaults = $d;
+    }
 
     my $self = { defaults => $defaults,
 		 format => '%s=%s',
@@ -746,7 +755,7 @@ maintainer.
 
 Copyright 2001, 2002 by Randy Jay Yarger
 Copyright 2002, 2003 by Craig Manley.
-Copyright 2003-2006 by Salvador FandiE<ntilde>o.
+Copyright 2003-2009 by Salvador FandiE<ntilde>o.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

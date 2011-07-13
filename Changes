@@ -1,5 +1,8 @@
 Revision history for Perl extension Config::Properties.
 
+1.72
+    - accept a hash as defaults
+
 1.71  May 31, 2009
     - changeProperties was generating a warning when the former value
       was undef (bug report by Jony Salonen)
