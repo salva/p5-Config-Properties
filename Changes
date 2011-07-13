@@ -1,6 +1,8 @@
 Revision history for Perl extension Config::Properties.
 
 1.72
+    - accept a filename on the constructor and load it
+    - accept optional arguments on the constructor
     - accept a hash as defaults
 
 1.71  May 31, 2009

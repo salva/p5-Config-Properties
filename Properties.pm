@@ -574,13 +574,44 @@ C<Config::Property> objects have this set of methods available:
 
 =over 4
 
-=item Config::Properties-E<gt>new()
+=item Config::Properties-E<gr>new(%opts)
+
+Creates a new Config::Properties object.
+
+The optional arguments are as follows:
+
+=over 4
+
+=item file => $filename
+
+Opens and reads the entries from the given properties file
+
+=item format => $format
+
+Sets the format using for saving the properties to a file. See
+L</setFormat>.
+
+=item defaults => $defaults
+
+Default configuration values.
+
+The given parameter can be a hash reference or another
+Config::Properties object.
+
+In that way several configuration objects can be chained. For
+instance:
+
+  my %defaults = (...);
+  my $global_config = Config::Properties->new(file => '/etc/foo.properties',
+                                              defaults => \%defaults);
+  my $user_config = Config::Properties->new(file => '/home/jsmith/.foo/foo.properties',
+                                            defaults => $global_config);
+
+=back
 
 =item Config::Properties-E<gt>new($defaults)
 
-creates a new Config::Properties object. The optional C<$defaults>
-parameter can be used to pass another Config::Properties object
-holding default property values.
+Calling C<new> in this way is deprecated.
 
 =item $p-E<gt>getProperty($k, $default, $default2, ...)
 
@@ -750,7 +781,7 @@ string with the content.
 
 =item $p-E<gt>setFormat($f)
 
-get/set the format string used when saving the object to a file.
+X<setFormat>get/set the format string used when saving the object to a file.
 
 =back
 
@@ -773,7 +804,7 @@ maintainer.
 
 Copyright 2001, 2002 by Randy Jay Yarger
 Copyright 2002, 2003 by Craig Manley.
-Copyright 2003-2009 by Salvador FandiE<ntilde>o.
+Copyright 2003-2009, 2011 by Salvador FandiE<ntilde>o.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
