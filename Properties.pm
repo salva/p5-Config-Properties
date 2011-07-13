@@ -49,23 +49,41 @@ use Carp;
 #   for this object.
 sub new {
     my $class = shift;
-    my $defaults = shift;
+    my $defaults;
+    $defaults = shift if @_ & 1;
+    my %opts = @_;
+    $defaults = delete $opts{defaults} unless defined $defaults;
+    my $format = delete $opts{format};
+    $format = '%s=%s' unless defined $format;
+    my $file = delete $opts{file};
+    %opts and croak "invalid option(s) '" . join("', '", keys %opts) . "'";
 
-    if (defined $defaults and ref $defaults eq 'HASH') {
-        my $d = Config::Properties->new;
-        while (my ($k, $v) = each %$defaults) {
-            $d->setProperty($k, $v);
+    if (defined $defaults) {
+        if (ref $defaults eq 'HASH') {
+            my $d = Config::Properties->new;
+            while (my ($k, $v) = each %$defaults) {
+                $d->setProperty($k, $v);
+            }
+            $defaults = $d;
         }
-        $defaults = $d;
+        elsif (!$defaults->isa('Config::Properties')) {
+            croak die "defaults parameter is not a Config::Properties object or a hash"
+        }
     }
 
     my $self = { defaults => $defaults,
-		 format => '%s=%s',
+		 format => $format,
 		 properties => {},
 		 next_line_number => 1,
-		 property_line_numbers => {} };
+		 property_line_numbers => {},
+                 file => $file };
     bless $self, $class;
 
+    if (defined $file) {
+        open my $fh, '<', $file or croak "unable to open file '$file': $!";
+        $self->load($fh);
+        close $fh or croak "unable to load file '$file': $!";
+    }
     return $self;
 }
 
@@ -223,7 +241,7 @@ sub process_line {
     my $line=<$file>;
 
     defined $line or return undef;
-    my $ln=$self->{line_number}=$file->input_line_number;
+    my $ln = $self->{line_number} = $file->input_line_number;
     if ($ln == 1) {
         # remove utf8 byte order mark
         $line =~ s/$bomre//;
@@ -330,7 +348,7 @@ sub _save {
 
 #	save() - Save the properties to a filehandle with the given header.
 sub save {
-    my ($self, $file, $header)=@_;
+    my ($self, $file, $header) = @_;
     _t_file($file);
 
     if (defined $header) {
@@ -493,24 +511,24 @@ Config::Properties - Read and write property files
 
   # reading...
 
-  open PROPS, "< my_config.props"
+  open my $fh, '<', 'my_config.props'
     or die "unable to open configuration file";
 
-  my $properties = new Config::Properties();
-  $properties->load(*PROPS);
+  my $properties = Config::Properties->new();
+  $properties->load($fh);
 
-  $value = $properties->getProperty( $key );
+  $value = $properties->getProperty($key);
 
 
   # saving...
 
-  open PROPS, "> my_config.props"
+  open my $fh, '>', 'my_config.props'
     or die "unable to open configuration file for writing";
 
-  $properties->setProperty( $key, $value );
+  $properties->setProperty($key, $value);
 
-  $properties->format( '%s => %s' );
-  $properties->store(*PROPS, $header );
+  $properties->format('%s => %s');
+  $properties->store($fh, $header );
 
 
 =head1 DESCRIPTION
