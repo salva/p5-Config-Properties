@@ -1,5 +1,8 @@
 Revision history for Perl extension Config::Properties.
 
+1.73  Oct 4, 2011
+    - allow disabling wrapping
+
 1.72  Jul 13, 2011
     - reorganize package structure
     - improve documentation

@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.72';
+our $VERSION = '1.73';
 
 use IO::Handle;
 use Carp;
@@ -55,6 +55,8 @@ sub new {
     $defaults = delete $opts{defaults} unless defined $defaults;
     my $format = delete $opts{format};
     $format = '%s=%s' unless defined $format;
+    my $wrap = delete $opts{wrap};
+    $wrap = 1 unless defined $wrap;
     my $file = delete $opts{file};
     %opts and croak "invalid option(s) '" . join("', '", keys %opts) . "'";
 
@@ -73,6 +75,7 @@ sub new {
 
     my $self = { defaults => $defaults,
 		 format => $format,
+                 wrap => $wrap,
 		 properties => {},
 		 next_line_number => 1,
 		 property_line_numbers => {},
@@ -312,18 +315,21 @@ sub _save {
     _t_file $file;
 
     my $wrap;
-    eval {
-	require Text::Wrap;
-	$wrap=($Text::Wrap::VERSION >= 2001.0929);
-    };
-    unless ($wrap) {
-	carp "Text::Wrap module is to old, version 2001.0929 or newer required: long lines will not be wrapped"
+    if ($self->{wrap}) {
+        eval {
+            no warnings;
+            require Text::Wrap;
+            $wrap=($Text::Wrap::VERSION >= 2001.0929);
+        };
+        unless ($wrap) {
+            carp "Text::Wrap module is to old, version 2001.0929 or newer required: long lines will not be wrapped"
+        }
     }
 
-    local($Text::Wrap::separator)=" \\\n";
-    local($Text::Wrap::unexpand)=undef;
-    local($Text::Wrap::huge)='overflow';
-    local($Text::Wrap::break)=qr/(?<!\\) (?! )/;
+    local($Text::Wrap::separator)=" \\\n"       if $wrap;
+    local($Text::Wrap::unexpand)=undef          if $wrap;
+    local($Text::Wrap::huge)='overflow'         if $wrap;
+    local($Text::Wrap::break)=qr/(?<!\\) (?! )/ if $wrap;
 
     my $sk=$self->{property_line_numbers};
     foreach (sort { $sk->{$a} <=> $sk->{$b} } keys %{$self->{properties}}) {
@@ -590,6 +596,10 @@ Opens and reads the entries from the given properties file
 
 Sets the format using for saving the properties to a file. See
 L</setFormat>.
+
+=item wrap => 0
+
+Disables wrapping of long lines when saving the properties to a file.
 
 =item defaults => $defaults
 
