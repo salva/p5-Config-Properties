@@ -803,6 +803,12 @@ L<http://java.sun.com/j2se/1.3/docs/api/index.html>.
 L<Config::Properties::Simple> for a simpler alternative interface to
 L<Config::Properties>.
 
+=head1 TODO
+
+Add support for derived format as supported by Java class
+org.apache.commons.configuration.PropertiesConfiguration
+(L<http://commons.apache.org/configuration/apidocs/org/apache/commons/configuration/PropertiesConfiguration.html>)
+
 =head1 AUTHORS
 
 C<Config::Properties> was originally developed by Randy Jay Yarger. It
