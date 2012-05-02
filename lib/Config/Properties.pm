@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.73';
+our $VERSION = '1.74';
 
 use IO::Handle;
 use Carp;
@@ -367,7 +367,7 @@ sub save {
 
 sub saveToString {
     my $self = shift;
-    my $str; # = '';
+    my $str = '';
     open my $fh, '>', \$str
 	or die "unable to open string ref as file";
     $self->save($fh, @_);

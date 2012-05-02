@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+1.74
+    - silence warning on saveToString method (bug report by Mithun
+      Ayachit)
+
 1.73  Oct 4, 2011
     - allow disabling wrapping
 
