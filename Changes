@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+1.75
+	- Added propertyNamesOrdered to return properties in the order
+	  they were set
+
 1.74
     - silence warning on saveToString method (bug report by Mithun
       Ayachit)
@@ -152,7 +156,7 @@ Revision history for Perl extension Config::Properties.
 
 0.43  Tue Apr 15 2003
 	- module maintenace changed from Craig Manley to Salvador
-	  Fandiño <sfandino@yahoo.com>
+	  FandiÃ±o <sfandino@yahoo.com>
 
 0.42  Tue Apr 15 2003
 	- Added 'setValidator', 'getValidator' and 'validator'

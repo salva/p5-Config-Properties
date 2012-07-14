@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.74';
+our $VERSION = '1.75';
 
 use IO::Handle;
 use Carp;
@@ -331,8 +331,7 @@ sub _save {
     local($Text::Wrap::huge)='overflow'         if $wrap;
     local($Text::Wrap::break)=qr/(?<!\\) (?! )/ if $wrap;
 
-    my $sk=$self->{property_line_numbers};
-    foreach (sort { $sk->{$a} <=> $sk->{$b} } keys %{$self->{properties}}) {
+    foreach ($self->propertyNamesOrdered()) {
 	my $key=$_;
 	my $value=$self->{properties}{$key};
 	escape_key $key;
@@ -503,6 +502,13 @@ sub propertyNames {
     keys %p;
 }
 
+#   propertyNamesOrdered() - Returns an array of the keys of the Properties in the order they were set
+sub propertyNamesOrdered {
+    my $self = shift;
+    my $sk=$self->{property_line_numbers};
+    my @ordered = sort { $sk->{$a} <=> $sk->{$b} } keys %{$self->{properties}};
+    return @ordered;
+}
 
 1;
 __END__
@@ -679,6 +685,10 @@ returns a hash reference with all the properties (including those passed as defa
 =item $p-E<gt>propertyNames;
 
 returns the names of all the properties (including those passed as defaults).
+
+=item $-E<gt>propertyNamesOrdered;
+
+Similar to C<propertyNames>, but returns the names in the order they were read or set.
 
 =item $p-E<gt>splitToTree()
 
