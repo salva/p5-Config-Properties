@@ -1,6 +1,6 @@
 Revision history for Perl extension Config::Properties.
 
-1.74 
+1.74  Jul 16, 2012
     - add support for order feature
     - silence warning on saveToString method (bug report by Mithun
       Ayachit)
