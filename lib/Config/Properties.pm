@@ -40,6 +40,12 @@ use Carp;
 	defined ($f) or
 	    croak "invalid file '$f'";
     }
+
+    sub _t_order ($) {
+        my $o = shift;
+        $o =~ /^(?:keep|alpha|none)$/ or
+            croak "invalid order";
+    }
 }
 
 #   new() - Constructor
@@ -57,7 +63,12 @@ sub new {
     $format = '%s=%s' unless defined $format;
     my $wrap = delete $opts{wrap};
     $wrap = 1 unless defined $wrap;
+    my $order = delete $opts{order};
+    $order = 'keep' unless defined $order;
+    _t_order($order);
     my $file = delete $opts{file};
+
+
     %opts and croak "invalid option(s) '" . join("', '", keys %opts) . "'";
 
     if (defined $defaults) {
@@ -76,6 +87,7 @@ sub new {
     my $self = { defaults => $defaults,
 		 format => $format,
                  wrap => $wrap,
+                 order => $order,
 		 properties => {},
 		 next_line_number => 1,
 		 property_line_numbers => {},
@@ -130,18 +142,26 @@ sub setProperty {
     $self->{properties}{$key} = $value;
 }
 
-#       properties() - return a flated hash with all the properties
-sub properties {
+sub _properties {
     my $self=shift;
     if (defined ($self->{defaults})) {
-	my %p=($self->{defaults}->properties, %{$self->{properties}});
+	my %p=($self->{defaults}->_properties, %{$self->{properties}});
 	return %p;
     }
     return %{ $self->{properties} }
 }
 
+#       properties() - return a flated hash with all the properties
+sub properties {
+    my $self = shift;
+    my %p = $self->_properties;
+    map { $_ => $p{$_} } $self->_sort_keys(keys %p);
+}
+
+
+
 #	getProperties() - Return a hashref of all of the properties
-sub getProperties { return { shift->properties }; }
+sub getProperties { return { shift->_properties }; }
 
 
 #	getFormat() - Return the output format for the properties
@@ -181,7 +201,6 @@ sub setValidator {
 #       getValidator() - Return the current validator sub
 sub getValidator { shift->{validator} }
 
-
 #       validator() - Alias for get/setValidator();
 sub validator {
     my $self=shift;
@@ -191,6 +210,19 @@ sub validator {
     $self->getValidator
 }
 
+sub setOrder {
+    my ($self, $order) = @_;
+    _t_order $order;
+    $self->{order} = $order
+}
+
+sub getOrder { shift->{order} }
+
+sub order {
+    my $self = shift;
+    $self->setOrder(@_) if @_;
+    $self->{order};
+}
 
 #	load() - Load the properties from a filehandle
 sub load {
@@ -308,6 +340,20 @@ sub fail {
     die "$error at line ".$self->line_number()."\n";
 }
 
+sub _sort_keys {
+    my $self = shift;
+    my $order = $self->{order};
+    if ($order eq 'keep') {
+        my $sk = $self->{property_line_numbers};
+        no warnings 'uninitialized';
+        return sort { $sk->{$a} <=> $sk->{$b} } @_;
+    }
+    if ($order eq 'alpha') {
+        return sort @_;
+    }
+    return @_;
+}
+
 #	_save() - Utility function that performs the actual saving of
 #		the properties file to a filehandle.
 sub _save {
@@ -331,8 +377,7 @@ sub _save {
     local($Text::Wrap::huge)='overflow'         if $wrap;
     local($Text::Wrap::break)=qr/(?<!\\) (?! )/ if $wrap;
 
-    my $sk=$self->{property_line_numbers};
-    foreach (sort { $sk->{$a} <=> $sk->{$b} } keys %{$self->{properties}}) {
+    foreach ($self->_sort_keys(keys %{$self->{properties}})) {
 	my $key=$_;
 	my $value=$self->{properties}{$key};
 	escape_key $key;
@@ -461,8 +506,7 @@ sub setFromTree { shift->_unsplit_from_tree(setProperty => @_) }
 sub changeFromTree { shift->_unsplit_from_tree(changeProperty => @_) }
 
 #	store() - Synonym for save()
-sub store { shift->save(@_) }
-
+*store = \&save;
 
 #	getProperty() - Return the value of a property key. Returns the default
 #		for that key (if there is one) if no value exists for that key.
@@ -499,8 +543,9 @@ sub _property_line_number {
 
 #	propertyName() - Returns an array of the keys of the Properties
 sub propertyNames {
-    my %p=shift->properties;
-    keys %p;
+    my $self = shift;
+    my %p = $self->_properties;
+    $self->_sort_keys(keys %p);
 }
 
 
@@ -616,6 +661,15 @@ instance:
                                               defaults => \%defaults);
   my $user_config = Config::Properties->new(file => '/home/jsmith/.foo/foo.properties',
                                             defaults => $global_config);
+
+=item order => 'keep'|'alpha'|'none'
+
+Sets how to order the properties when saved to a file or when returned
+by C<properties> and C<propertyNames> methods.
+
+C<alpha> sorts the keys in alphanumeric order. C<keep> keeps the order
+of the properties as added or readed from a file. C<none> returns the
+properties unordered.
 
 =back
 
@@ -820,7 +874,7 @@ maintainer.
 
 Copyright 2001, 2002 by Randy Jay Yarger
 Copyright 2002, 2003 by Craig Manley.
-Copyright 2003-2009, 2011 by Salvador FandiE<ntilde>o.
+Copyright 2003-2009, 2011, 2012 by Salvador FandiE<ntilde>o.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
