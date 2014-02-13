@@ -3,10 +3,11 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.74';
+our $VERSION = '1.76';
 
 use IO::Handle;
 use Carp;
+use PerlIO;
 
 {
     no warnings;
@@ -46,6 +47,12 @@ use Carp;
         $o =~ /^(?:keep|alpha|none)$/ or
             croak "invalid order";
     }
+
+    sub _t_encoding ($) {
+        my $e = shift;
+        $e =~ /^[\w\-]+$/ or
+            croak "invalid encoding '$e'";
+    }
 }
 
 #   new() - Constructor
@@ -67,7 +74,8 @@ sub new {
     $order = 'keep' unless defined $order;
     _t_order($order);
     my $file = delete $opts{file};
-
+    my $encoding = delete $opts{encoding} || 'latin1';
+    _t_encoding($encoding);
 
     %opts and croak "invalid option(s) '" . join("', '", keys %opts) . "'";
 
@@ -91,7 +99,8 @@ sub new {
 		 properties => {},
 		 next_line_number => 1,
 		 property_line_numbers => {},
-                 file => $file };
+                 file => $file,
+                 encoding => $encoding };
     bless $self, $class;
 
     if (defined $file) {
@@ -228,6 +237,10 @@ sub order {
 sub load {
     my ($self, $file) = @_;
     _t_file $file;
+    unless (grep /^(?:encoding|utf8)\b/, PerlIO::get_layers($file)) {
+        binmode $file, ":encoding($self->{encoding})"
+            or croak "Unable to set file encoding layer: $!";
+    }
     $self->{properties}={};
     $self->{property_line_numbers}={};
     $self->{next_line_number}=1;
@@ -670,6 +683,17 @@ by C<properties> and C<propertyNames> methods.
 C<alpha> sorts the keys in alphanumeric order. C<keep> keeps the order
 of the properties as added or readed from a file. C<none> returns the
 properties unordered.
+
+=item encoding => $encoding
+
+IO encoding used to read the configuration file. See L<PerlIO>.
+
+When C<load> is called the given encoding is used unless the file
+handler already has a encoding layer applied.
+
+C<latin1> is used as the default encoding (as specified in the Java
+properties specification).
+
 
 =back
 
