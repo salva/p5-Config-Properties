@@ -67,6 +67,7 @@ sub new {
     $order = 'keep' unless defined $order;
     _t_order($order);
     my $file = delete $opts{file};
+    my $utf8 = delete $opts{utf8};
 
 
     %opts and croak "invalid option(s) '" . join("', '", keys %opts) . "'";
@@ -95,7 +96,8 @@ sub new {
     bless $self, $class;
 
     if (defined $file) {
-        open my $fh, '<', $file or croak "unable to open file '$file': $!";
+        my $mode = $utf8 ? '<:utf8' : '<';
+        open my $fh, $mode, $file or croak "unable to open file '$file': $!";
         $self->load($fh);
         close $fh or croak "unable to load file '$file': $!";
     }
@@ -636,6 +638,10 @@ The optional arguments are as follows:
 =item file => $filename
 
 Opens and reads the entries from the given properties file
+
+=item utf8 => $utf8
+
+opens the file for reading/writing with the :utf8 layer.
 
 =item format => $format
 
