@@ -610,9 +610,9 @@ java.util.Properties API.  It is designed to allow easy reading,
 writing and manipulation of Java-style property files.
 
 The format of a Java-style property file is that of a key-value pair
-seperated by either whitespace, the colon (:) character, or the equals
+separated by either whitespace, the colon (:) character, or the equals
 (=) character.  Whitespace before the key and on either side of the
-seperator is ignored.
+separator is ignored.
 
 Lines that begin with either a hash (#) or a bang (!) are considered
 comment lines and ignored.
@@ -689,7 +689,7 @@ Sets how to order the properties when saved to a file or when returned
 by C<properties> and C<propertyNames> methods.
 
 C<alpha> sorts the keys in alphanumeric order. C<keep> keeps the order
-of the properties as added or readed from a file. C<none> returns the
+of the properties as added or read from a file. C<none> returns the
 properties unordered.
 
 =item encoding => $encoding
@@ -815,7 +815,7 @@ makes...
 =item $p-E<gt>setFromTree($tree, $separator, $start)
 
 This method sets properties from a tree of Perl hashes and arrays. It
-is the opposite to splitToTree.
+is the opposite of C<splitToTree>.
 
 C<$separator> is the string used to join the parts of the property
 names. The default value is a dot (C<.>).
@@ -898,7 +898,7 @@ org.apache.commons.configuration.PropertiesConfiguration
 =head1 AUTHORS
 
 C<Config::Properties> was originally developed by Randy Jay Yarger. It
-was mantained for some time by Craig Manley and finally it passed
+was maintained for some time by Craig Manley and finally it passed
 hands to Salvador FandiE<ntilde>o <sfandino@yahoo.com>, the current
 maintainer.
 
