@@ -29,7 +29,7 @@ close R
 # use Assert::Quote ':short';
 
 foreach my $k ($cfg->propertyNames, $cfg2->propertyNames) {
-    ok ($cfg->getProperty($k) eq $cfg2->getProperty($k), "same key/value");
+    is ($cfg->getProperty($k), $cfg2->getProperty($k), "same key/value")
 
 #    $cfg->getProperty($k) eq $cfg2->getProperty($k)
 #     or D($cfg->getProperty($k), $cfg2->getProperty($k))
