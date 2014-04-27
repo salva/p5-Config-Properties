@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+1.77  Apr 27, 2014
+    - binmode doesn't work on IO::String and others tied objects (bug
+      report by Mithun Ayachit)
+
 1.76  Feb 13, 2014
     - add encoding feature
 

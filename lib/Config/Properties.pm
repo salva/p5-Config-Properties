@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.76';
+our $VERSION = '1.77';
 
 use IO::Handle;
 use Carp;
@@ -237,9 +237,17 @@ sub order {
 sub load {
     my ($self, $file) = @_;
     _t_file $file;
-    unless (grep /^(?:encoding|utf8)\b/, PerlIO::get_layers($file)) {
-        binmode $file, ":encoding($self->{encoding})"
-            or croak "Unable to set file encoding layer: $!";
+
+    # check whether it is a real file handle
+    my $fn = do {
+        local $@;
+        eval { fileno($file) }
+    };
+    if (defined $fn and $fn >0) {
+        unless (grep /^(?:encoding|utf8)\b/, PerlIO::get_layers($file)) {
+            binmode $file, ":encoding($self->{encoding})"
+                or croak "Unable to set file encoding layer: $!";
+        }
     }
     $self->{properties}={};
     $self->{property_line_numbers}={};
@@ -287,8 +295,8 @@ my $bomre = eval(q< qr/^\\x{FEFF}/ >) || qr//;
 sub process_line {
     my ($self, $file) = @_;
     my $line=<$file>;
-
     defined $line or return undef;
+    $line =~ s/\r\n/\n/g;
     my $ln = $self->{line_number} = $file->input_line_number;
     if ($ln == 1) {
         # remove utf8 byte order mark
