@@ -21,7 +21,7 @@ after the backslash, the line break, and any whitespace at the beginning of the 
 
 When a property file is saved it is in the format "key=value" for each line.
 
-Read the POD documentation for more finer details!
+Read the POD documentation for more fine details!
 
 Installation
 ------------
