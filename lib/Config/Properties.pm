@@ -7,7 +7,8 @@ our $VERSION = '1.77';
 
 use IO::Handle;
 use Carp;
-use PerlIO;
+use PerlIO qw();
+use Errno qw();
 
 {
     no warnings;
@@ -76,6 +77,9 @@ sub new {
     my $file = delete $opts{file};
     my $encoding = delete $opts{encoding} || 'latin1';
     _t_encoding($encoding);
+    my $eol_re = delete $opts{eol_re};
+    $eol_re = qr/\r\n|\n|\r/ unless defined $eol_re;
+    my $line_re = qr/^(.*?)(?:$eol_re)/s;
 
     %opts and croak "invalid option(s) '" . join("', '", keys %opts) . "'";
 
@@ -97,10 +101,11 @@ sub new {
                  wrap => $wrap,
                  order => $order,
 		 properties => {},
-		 next_line_number => 1,
+		 last_line_number => 0,
 		 property_line_numbers => {},
                  file => $file,
-                 encoding => $encoding };
+                 encoding => $encoding,
+                 line_re => $line_re };
     bless $self, $class;
 
     if (defined $file) {
@@ -147,7 +152,7 @@ sub setProperty {
     defined(wantarray) and
 	carp "warning: setProperty doesn't return the old value anymore";
 
-    $self->{property_line_numbers}{$key} ||= $self->{next_line_number}++;
+    $self->{property_line_numbers}{$key} ||= ++$self->{last_line_number};
     $self->{properties}{$key} = $value;
 }
 
@@ -249,10 +254,13 @@ sub load {
                 or croak "Unable to set file encoding layer: $!";
         }
     }
-    $self->{properties}={};
-    $self->{property_line_numbers}={};
-    $self->{next_line_number}=1;
+    $self->{properties} = {};
+    $self->{property_line_numbers} = {};
+    my $ln = $file->input_line_number;
+    $self->{last_line_number} = ($ln > 0 ? $ln : 0);
+    $self->{buffer_in} = '';
     1 while $self->process_line($file);
+    $self->{last_line_number};
 }
 
 
@@ -286,6 +294,33 @@ sub unescape {
 	defined $1 ? $unesc{$1}||$1 : chr hex $2 /ge;
 }
 
+sub read_line {
+    my ($self, $file) = @_;
+    my $bin = \$self->{buffer_in};
+    my $line_re = $self->{line_re};
+    while (1) {
+        if ($$bin =~ s/$line_re//) {
+            $self->{last_line_number}++;
+            return $1;
+        }
+        else {
+            my $bytes = read($file, $$bin, 8192, length $$bin);
+            last unless $bytes or (not defined $bytes and
+                                   ($! == Errno::EGAIN()       or
+                                    $! == Errno::EWOULDBLOCK() or
+                                    $! == Errno::EINTR()));
+        }
+    }
+
+    if (length $$bin) {
+        $self->{last_line_number}++;
+        my $line = $$bin;
+        $$bin = '';
+        return $line
+    }
+    undef;
+}
+
 
 #	process_line() - read and parse a line from the properties file.
 
@@ -294,29 +329,26 @@ my $bomre = eval(q< qr/^\\x{FEFF}/ >) || qr//;
 
 sub process_line {
     my ($self, $file) = @_;
-    my $line=<$file>;
+    my $line = $self->read_line($file);
     defined $line or return undef;
-    $line =~ s/\r\n/\n/g;
-    my $ln = $self->{line_number} = $file->input_line_number;
-    if ($ln == 1) {
-        # remove utf8 byte order mark
-        $line =~ s/$bomre//;
-    }
+
+    # remove utf8 byte order mark
+    my $ln = $self->{last_line_number};
+    $line =~ s/$bomre// if $ln < 2;
+
     # ignore comments
     $line =~ /^\s*(\#|\!|$)/ and return 1;
-
-    $line =~ s/\x0D*\x0A$//;
 
     # handle continuation lines
     my @lines;
     while ($line =~ /(\\+)$/ and length($1) & 1) {
 	$line =~ s/\\$//;
 	push @lines, $line;
-	$line = <$file>;
-	$line =~ s/\x0D*\x0A$//;
+	$line = $self->read_line($file);
+        $line = '' unless defined $line;
 	$line =~ s/^\s+//;
     }
-    $line=join('', @lines, $line) if @lines;
+    $line = join('', @lines, $line) if @lines;
 
     my ($key, $value) = $line =~ /^
 				  \s*
@@ -328,15 +360,13 @@ sub process_line {
 				  $
 				  /x
        or $self->fail("invalid property line '$line'");
-	
+
     unescape $key;
     unescape $value;
 
     $self->validate($key, $value);
 
     $self->{property_line_numbers}{$key} = $ln;
-    $self->{next_line_number}=$ln+1;
-
     $self->{properties}{$key} = $value;
 
     return 1;
@@ -352,7 +382,7 @@ sub validate {
 
 
 #       line_number() - number for the last line read from the configuration file
-sub line_number { shift->{line_number} }
+sub line_number { shift->{last_line_number} }
 
 
 #       fail(error) - report errors in the configuration file while reading.
@@ -855,7 +885,7 @@ instead of C<setProperty> to set the property values.
 
 loads properties from the open file C<$file>.
 
-Old properties on the object are forgotten.
+Old properties on the object are discarded.
 
 =item $p-E<gt>save($file)
 
