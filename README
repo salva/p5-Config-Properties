@@ -21,6 +21,7 @@ after the backslash, the line break, and any whitespace at the beginning of the 
 
 When a property file is saved it is in the format "key=value" for each line.
 
+Read the POD documentation for more finer details!
 
 Installation
 ------------
@@ -43,7 +44,7 @@ Copyright
 
 Copyright (c) 2001 Randy Jay Yarger. All Rights Reserved.
 Copyright (c) 2002 Craig Manley
-Copyright (c) 2003-2009, 2011, 2012 Salvador Fandiño <sfandino@yahoo.com>
+Copyright (c) 2003-2009, 2011-2012, 2014-2015 Salvador Fandiño <sfandino@yahoo.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.77';
+our $VERSION = '1.78';
 
 use IO::Handle;
 use Carp;
@@ -936,7 +936,7 @@ maintainer.
 
 Copyright 2001, 2002 by Randy Jay Yarger
 Copyright 2002, 2003 by Craig Manley.
-Copyright 2003-2009, 2011, 2012 by Salvador FandiE<ntilde>o.
+Copyright 2003-2009, 2011-2012, 2014-2015 by Salvador FandiE<ntilde>o.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

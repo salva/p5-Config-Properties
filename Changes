@@ -1,5 +1,10 @@
 Revision history for Perl extension Config::Properties.
 
+1.78  May 7, 2015
+    - accept any end of line terminator (i.e. "\r\n", "\r" or "\n")
+      independently of the underlaying operating system (bug report by
+      William Fishburne, problem analysis by Alexander Brett)
+
 1.77  Apr 27, 2014
     - binmode doesn't work on IO::String and others tied objects (bug
       report by Mithun Ayachit)
