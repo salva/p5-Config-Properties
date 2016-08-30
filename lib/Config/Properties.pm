@@ -3,7 +3,7 @@ package Config::Properties;
 use strict;
 use warnings;
 
-our $VERSION = '1.79';
+our $VERSION = '1.80';
 
 use IO::Handle;
 use Carp;
@@ -67,15 +67,17 @@ sub new {
     $defaults = shift if @_ & 1;
     my %opts = @_;
     $defaults = delete $opts{defaults} unless defined $defaults;
+    my $be_like_java = delete $opts{be_like_java};
     my $format = delete $opts{format};
     $format = '%s=%s' unless defined $format;
     my $wrap = delete $opts{wrap};
-    $wrap = 1 unless defined $wrap;
+    $wrap = !$be_like_java unless defined $wrap;
     my $order = delete $opts{order};
     $order = 'keep' unless defined $order;
     _t_order($order);
     my $file = delete $opts{file};
-    my $encoding = delete $opts{encoding} || 'latin1';
+    my $encoding = delete $opts{encoding};
+    $encoding = 'latin1' unless defined $encoding;
     _t_encoding($encoding);
     my $eol_re = delete $opts{eol_re};
     $eol_re = qr/\r\n|\n|\r/ unless defined $eol_re;
@@ -97,6 +99,7 @@ sub new {
     }
 
     my $self = { defaults => $defaults,
+                 be_like_java => $be_like_java,
 		 format => $format,
                  wrap => $wrap,
                  order => $order,
@@ -150,7 +153,7 @@ sub setProperty {
     _t_value $value;
 
     defined(wantarray) and
-	carp "warning: setProperty doesn't return the old value anymore";
+	warnings::warnif(void => "warning: setProperty doesn't return the old value anymore");
 
     $self->{property_line_numbers}{$key} ||= ++$self->{last_line_number};
     $self->{properties}{$key} = $value;
@@ -419,7 +422,7 @@ sub _save {
             $wrap=($Text::Wrap::VERSION >= 2001.0929);
         };
         unless ($wrap) {
-            carp "Text::Wrap module is to old, version 2001.0929 or newer required: long lines will not be wrapped"
+            warnings::warn("Text::Wrap module is to old, version 2001.0929 or newer required: long lines will not be wrapped");
         }
     }
 
@@ -432,7 +435,12 @@ sub _save {
 	my $key=$_;
 	my $value=$self->{properties}{$key};
 	escape_key $key;
-	escape_value $value;
+	if ($self->{be_like_java}) {
+            escape_key $value;
+        }
+        else {
+            escape_value $value;
+        }
 
 	if ($wrap) {
 	    $file->print( Text::Wrap::wrap( "",
@@ -732,6 +740,13 @@ handler already has a encoding layer applied.
 C<latin1> is used as the default encoding (as specified in the Java
 properties specification).
 
+=item be_like_java => 1
+
+When this feature is enabled, the module will try to mimic the Java
+implementation as much as possible when saving files.
+
+Currently, some escaping rules are changed and line wrapping is
+disabled.
 
 =back
 

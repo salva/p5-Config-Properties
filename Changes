@@ -1,5 +1,9 @@
 Revision history for Perl extension Config::Properties.
 
+1.80  May 14, 2015
+    - add be_like_java feature (bug report by Bojan Jovanovic)
+    - generate warnings only when enabled
+
 1.79  May 7, 2015
     - add repository metadata
 
