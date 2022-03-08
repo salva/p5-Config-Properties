@@ -913,6 +913,12 @@ Old properties on the object are discarded.
 save the properties to the open file C<$file>. Default properties are
 not saved.
 
+C<$header> is an optional parameter that includes text to the properties file
+as a comment. It can be a multiline scalar.
+
+C<save> always includes a timestamp using C<localtime()> as a comment by
+default.
+
 =item $p-E<gt>saveToString($header)
 
 similar to C<save>, but instead of saving to a file, it returns a
@@ -937,21 +943,37 @@ L<Config::Properties>.
 =head1 TODO
 
 Add support for derived format as supported by Java class
-org.apache.commons.configuration.PropertiesConfiguration
-(L<http://commons.apache.org/configuration/apidocs/org/apache/commons/configuration/PropertiesConfiguration.html>)
+C<org.apache.commons.configuration.PropertiesConfiguration>.
+
+See
+L<http://commons.apache.org/configuration/apidocs/org/apache/commons/configuration/PropertiesConfiguration.html> for details.
 
 =head1 AUTHORS
 
+=encoding utf8
+
 C<Config::Properties> was originally developed by Randy Jay Yarger. It
 was maintained for some time by Craig Manley and finally it passed
-hands to Salvador FandiE<ntilde>o <sfandino@yahoo.com>, the current
+hands to Salvador Fandiño E<lt>sfandino@yahoo.comE<gt>, the current
 maintainer.
 
 =head1 COPYRIGHT AND LICENSE
 
+=over
+
+=item *
+
 Copyright 2001, 2002 by Randy Jay Yarger
+
+=item *
+
 Copyright 2002, 2003 by Craig Manley.
+
+=item *
+
 Copyright 2003-2009, 2011-2012, 2014-2015 by Salvador FandiE<ntilde>o.
+
+=back
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
